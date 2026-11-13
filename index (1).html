@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dustup Arena</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#161a22;--panel:#232a36;--line:#3a4558;--text:#eef1f6;--mute:#9aa6ba;--accent:#ff6b57}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font-family:"Chakra Petch",system-ui,sans-serif}
+#menu{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:16px;background:var(--bg);z-index:5}
+.card{width:100%;max-width:380px;background:var(--panel);border:2px solid var(--line);border-radius:14px;padding:24px}
+h1{margin:0 0 4px;font-size:34px;letter-spacing:.5px}
+p.s{margin:0 0 18px;color:var(--mute);font-size:14px}
+input{width:100%;padding:12px;border-radius:8px;border:2px solid var(--line);background:var(--bg);color:var(--text);font:inherit;font-size:16px;margin-bottom:10px}
+input:focus,button:focus-visible{outline:3px solid var(--accent);outline-offset:1px}
+button{width:100%;padding:12px;border-radius:8px;border:0;background:var(--accent);color:#1a0d0a;font:inherit;font-weight:700;font-size:16px;cursor:pointer}
+button.alt{background:transparent;color:var(--text);border:2px solid var(--line)}
+.row{display:flex;gap:8px}.row input{margin:0}.row button{width:auto;padding:0 18px}
+hr{border:0;border-top:1px solid var(--line);margin:16px 0}
+#msg{min-height:20px;margin-top:12px;font-size:14px;color:var(--mute)}
+#game{display:none;position:fixed;inset:0;align-items:center;justify-content:center}
+canvas{max-width:100vw;max-height:100vh;aspect-ratio:1000/650;background:#232a36;cursor:crosshair;touch-action:none}
+#hud{position:fixed;top:8px;left:8px;font-size:14px;background:#161a22cc;border:1px solid var(--line);border-radius:8px;padding:6px 10px}
+#hud b{color:var(--accent)}
+</style>
+</head>
+<body>
+<div id="menu"><div class="card">
+  <h1>Dustup Arena</h1>
+  <p class="s">Top-down arena shooter. Up to 6 players, no server needed.</p>
+  <input id="name" maxlength="12" placeholder="Your name" autocomplete="off">
+  <button id="host">Host a game</button>
+  <hr>
+  <div class="row"><input id="code" maxlength="4" placeholder="Room code" autocomplete="off"><button class="alt" id="join">Join</button></div>
+  <div id="msg" role="status"></div>
+  <p class="s" style="margin:14px 0 0">Move with WASD or arrows. Aim with the mouse. Hold click to shoot.</p>
+</div></div>
+<div id="game"><canvas id="c" width="1000" height="650"></canvas></div>
+<div id="hud" hidden></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/peerjs/1.5.4/peerjs.min.js"></script>
+<script>
+"use strict";
+const W=1000,H=650,R=16,PREFIX="dustup-arena-",COLORS=["#ff6b57","#4cc9f0","#ffd166","#06d6a0","#b388ff","#ff8fab"];
+const WALLS=[[430,260,140,130],[140,120,30,160],[830,370,30,160],[200,470,160,30],[640,120,160,30],[60,300,60,30],[880,300,60,30]];
+const $=id=>document.getElementById(id), cv=$("c"), ctx=cv.getContext("2d");
+let peer,isHost=false,myId=null,room="",hostConn=null,conns={},inputs={},players={},bullets=[],snap=null;
+const keys={},mouse={x:W/2,y:H/2,down:false};
+let snaps=[],off=null,meP=null,shots=0,prevShots=0,audio=null,flash=0,prevHp={},hitT={},lastDraw=performance.now();
+
+/* ---------- Sound (synthesized, no files) ---------- */
+function initAudio(){try{if(!audio)audio=new(window.AudioContext||window.webkitAudioContext)();if(audio.state==="suspended")audio.resume()}catch(e){}}
+function sfxShot(){
+  if(!audio)return;const t=audio.currentTime,n=Math.floor(audio.sampleRate*0.14),buf=audio.createBuffer(1,n,audio.sampleRate),d=buf.getChannelData(0);
+  for(let i=0;i<n;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/n,3);
+  const src=audio.createBufferSource();src.buffer=buf;const g=audio.createGain();g.gain.value=0.22;src.connect(g).connect(audio.destination);src.start(t);
+  const o=audio.createOscillator(),og=audio.createGain();o.type="sawtooth";o.frequency.setValueAtTime(260,t);o.frequency.exponentialRampToValueAtTime(50,t+0.12);
+  og.gain.setValueAtTime(0.18,t);og.gain.exponentialRampToValueAtTime(0.001,t+0.13);o.connect(og).connect(audio.destination);o.start(t);o.stop(t+0.14);
+}
+function sfxHurt(){
+  if(!audio)return;const t=audio.currentTime,o=audio.createOscillator(),g=audio.createGain();
+  o.type="square";o.frequency.setValueAtTime(200,t);o.frequency.exponentialRampToValueAtTime(80,t+0.2);
+  g.gain.setValueAtTime(0.15,t);g.gain.exponentialRampToValueAtTime(0.001,t+0.22);o.connect(g).connect(audio.destination);o.start(t);o.stop(t+0.23);
+}
+
+/* ---------- Blocky Steve-style player (drawn with code) ---------- */
+function steve(x,y,a,hit){
+  ctx.save();ctx.translate(x,y);ctx.rotate(a);
+  const f=(c,hc,rx,ry,w,h)=>{ctx.fillStyle=hit?hc:c;ctx.fillRect(rx,ry,w,h)};
+  f("#00a8a8","#ff2b2b",-6,-14,12,28);          // shirt / shoulders
+  f("#c69274","#ff6a6a",-6,-14,12,5);           // back arm
+  f("#c69274","#ff6a6a",-6,9,12,5);             // front arm
+  f("#c69274","#ff6a6a",6,8,10,5);              // arm reaching forward
+  f("#8a8f98","#b02020",14,7,9,3);              // gun barrel
+  f("#4a2f1b","#b01818",-8,-8,16,16);           // hair
+  f("#c69274","#ff6a6a",3,-8,5,16);             // face
+  f("#ffffff","#ffffff",5,-5,2,2);f("#ffffff","#ffffff",5,3,2,2);
+  f("#3b2a8c","#7a0000",6,-5,1,2);f("#3b2a8c","#7a0000",6,3,1,2);
+  ctx.restore();
+}
+
+function msg(t){$("msg").textContent=t}
+function rnd(n){return Math.floor(Math.random()*n)}
+function newCode(){const a="ABCDEFGHJKLMNPQRSTUVWXYZ";let s="";for(let i=0;i<4;i++)s+=a[rnd(a.length)];return s}
+function hitsWall(x,y,r){for(const[a,b,w,h]of WALLS){const cx=Math.max(a,Math.min(x,a+w)),cy=Math.max(b,Math.min(y,b+h));if((x-cx)**2+(y-cy)**2<r*r)return true}return false}
+function spawnPoint(){for(let i=0;i<50;i++){const x=R+rnd(W-2*R),y=R+rnd(H-2*R);if(!hitsWall(x,y,R+20))return[x,y]}return[50,50]}
+function uniqName(n){
+  n=(n||"Player").trim().slice(0,12)||"Player";
+  const taken=new Set(Object.values(players).map(p=>p.name.toLowerCase()));
+  if(!taken.has(n.toLowerCase()))return n;
+  for(let i=2;;i++){const t=String(i),c=n.slice(0,12-t.length)+t;if(!taken.has(c.toLowerCase()))return c}
+}
+function addPlayer(id,name){const[x,y]=spawnPoint();const used=Object.values(players).map(p=>p.c);let c=0;while(used.includes(c))c++;players[id]={x,y,a:0,hp:100,k:0,d:0,name:uniqName(name),c:c%COLORS.length,dead:0,cd:0}}
+
+/* ---------- Host simulation ---------- */
+function move(p,dx,dy){
+  const nx=Math.max(R,Math.min(W-R,p.x+dx));if(!hitsWall(nx,p.y,R))p.x=nx;
+  const ny=Math.max(R,Math.min(H-R,p.y+dy));if(!hitsWall(p.x,ny,R))p.y=ny;
+}
+function step(dt){
+  for(const id in players){
+    const p=players[id],i=inputs[id]||{};
+    if(p.dead>0){p.dead-=dt;if(p.dead<=0){const[x,y]=spawnPoint();p.x=x;p.y=y;p.hp=100;p.dead=0}continue}
+    let dx=(i.r?1:0)-(i.l?1:0),dy=(i.d?1:0)-(i.u?1:0);const m=Math.hypot(dx,dy)||1;
+    move(p,dx/m*230*dt,dy/m*230*dt);
+    if(typeof i.a==="number")p.a=i.a;
+    p.cd-=dt;
+    if(i.s&&p.cd<=0){p.cd=0.2;shots++;bullets.push({x:p.x+Math.cos(p.a)*R,y:p.y+Math.sin(p.a)*R,vx:Math.cos(p.a)*620,vy:Math.sin(p.a)*620,o:id,t:1.1})}
+  }
+  for(let n=bullets.length-1;n>=0;n--){
+    const b=bullets[n];b.x+=b.vx*dt;b.y+=b.vy*dt;b.t-=dt;
+    let dead=b.t<=0||b.x<0||b.y<0||b.x>W||b.y>H||hitsWall(b.x,b.y,3);
+    if(!dead)for(const id in players){const p=players[id];
+      if(id===b.o||p.dead>0)continue;
+      if((p.x-b.x)**2+(p.y-b.y)**2<(R+3)**2){
+        p.hp-=25;dead=true;
+        if(p.hp<=0){p.dead=3;p.d++;if(players[b.o]){players[b.o].k++;players[b.o].hp=100}}
+        break}}
+    if(dead)bullets.splice(n,1);
+  }
+}
+function broadcast(){
+  const s={p:Object.entries(players).map(([id,p])=>[id,p.x|0,p.y|0,+p.a.toFixed(2),p.hp,p.k,p.d,p.name,p.c,p.dead>0?1:0]),b:bullets.map(b=>[b.x|0,b.y|0,b.vx|0,b.vy|0]),sh:shots,t:performance.now()/1000};
+  const str=JSON.stringify(s);
+  for(const id in conns)if(conns[id].open)conns[id].send(str);
+  snap=s;
+}
+
+/* ---------- Networking ---------- */
+function startHost(name,tries=0){
+  room=newCode();msg("Creating room...");
+  peer=new Peer(PREFIX+room);
+  peer.on("open",id=>{
+    isHost=true;myId=id;addPlayer(id,name);enterGame();
+    let last=performance.now(),acc=0;
+    function tick(){
+      const now=performance.now();let rem=Math.min(.25,(now-last)/1000);last=now;acc+=rem;
+      inputs[myId]=localInput();
+      while(rem>0){const d=Math.min(rem,1/60);step(d);rem-=d}
+      if(acc>=1/30){acc=0;broadcast()}
+    }
+    setInterval(()=>{if(document.hidden)tick()},50);
+    (function loop(){tick();draw();requestAnimationFrame(loop)})();
+  });
+  peer.on("connection",c=>{
+    c.on("data",d=>{
+      if(d&&d.t==="join"){if(conns[c.peer])return;
+        if(Object.keys(players).length>=6){c.send(JSON.stringify({full:1}));setTimeout(()=>c.close(),300);return}
+        conns[c.peer]=c;addPlayer(c.peer,d.name);
+      }else if(d&&d.t==="in"&&players[c.peer])inputs[c.peer]=d;
+    });
+    c.on("close",()=>{delete conns[c.peer];delete players[c.peer];delete inputs[c.peer]});
+  });
+  peer.on("error",e=>{
+    if(e.type==="unavailable-id"&&tries<5){peer.destroy();startHost(name,tries+1)}
+    else msg("Could not start: "+e.type);
+  });
+}
+function startJoin(name,code){
+  room=code.toUpperCase();msg("Connecting...");
+  peer=new Peer();
+  peer.on("open",id=>{
+    myId=id;hostConn=peer.connect(PREFIX+room,{reliable:false});
+    const to=setTimeout(()=>msg("Room not found. Check the code."),8000);
+    hostConn.on("open",()=>{clearTimeout(to);enterGame();
+      hostConn.send({t:"join",name});
+      const j=setInterval(()=>{if(snaps.length)clearInterval(j);else if(hostConn.open)hostConn.send({t:"join",name})},400);
+      setInterval(()=>{if(hostConn.open)hostConn.send(Object.assign({t:"in"},localInput()))},1000/40);
+      (function loop(){draw();requestAnimationFrame(loop)})();
+    });
+    hostConn.on("data",d=>{
+      const s=JSON.parse(d);if(s.full){alert("Room is full.");location.reload();return}
+      const now=performance.now()/1000,o=now-s.t;off=off===null?o:off*0.9+o*0.1;
+      s.rt=now;snaps.push(s);if(snaps.length>12)snaps.shift();
+    });
+    hostConn.on("close",()=>{alert("Host left the game.");location.reload()});
+  });
+  peer.on("error",e=>msg(e.type==="peer-unavailable"?"Room not found. Check the code.":"Connection error: "+e.type));
+}
+
+/* ---------- Input ---------- */
+function localInput(){
+  let ax=W/2,ay=H/2;const me=getMe();if(me){ax=me.x;ay=me.y}
+  return{u:keys.w||keys.arrowup,d:keys.s||keys.arrowdown,l:keys.a||keys.arrowleft,r:keys.d||keys.arrowright,s:mouse.down,a:Math.atan2(mouse.y-ay,mouse.x-ax)};
+}
+function getMe(){
+  if(isHost)return players[myId];
+  return meP;
+}
+addEventListener("keydown",e=>{keys[e.key.toLowerCase()]=true;if(e.key.startsWith("Arrow"))e.preventDefault()});
+addEventListener("keyup",e=>{keys[e.key.toLowerCase()]=false});
+cv.addEventListener("pointermove",e=>{const r=cv.getBoundingClientRect();mouse.x=(e.clientX-r.left)*W/r.width;mouse.y=(e.clientY-r.top)*H/r.height});
+cv.addEventListener("pointerdown",e=>{mouse.down=true;cv.setPointerCapture(e.pointerId)});
+addEventListener("pointerup",()=>mouse.down=false);
+cv.addEventListener("contextmenu",e=>e.preventDefault());
+
+/* ---------- Client smoothing: interpolation + prediction ---------- */
+function clientView(dt){
+  const sn=snaps[snaps.length-1];if(!sn)return null;
+  const now=performance.now()/1000,rt=now-off-0.09;
+  let ai=-1;for(let i=0;i<snaps.length;i++){if(snaps[i].t<=rt)ai=i;else break}
+  const A=snaps[Math.max(ai,0)],B=snaps[Math.min(ai+1,snaps.length-1)];
+  const k=B.t>A.t?Math.min(1,Math.max(0,(rt-A.t)/(B.t-A.t))):0;
+  const out=sn.p.map(r=>{
+    const pa=A.p.find(q=>q[0]===r[0]),pb=B.p.find(q=>q[0]===r[0]);
+    let x=r[1],y=r[2],a=r[3];
+    if(pa&&pb&&Math.hypot(pb[1]-pa[1],pb[2]-pa[2])<200){
+      x=pa[1]+(pb[1]-pa[1])*k;y=pa[2]+(pb[2]-pa[2])*k;
+      let da=pb[3]-pa[3];da=Math.atan2(Math.sin(da),Math.cos(da));a=pa[3]+da*k;
+    }else if(pb){x=pb[1];y=pb[2];a=pb[3]}
+    return[r[0],x,y,a,r[4],r[5],r[6],r[7],r[8],r[9]];
+  });
+  const sv=sn.p.find(r=>r[0]===myId),me=out.find(r=>r[0]===myId);
+  if(sv&&me){
+    if(!meP||sv[9]||Math.hypot(sv[1]-meP.x,sv[2]-meP.y)>150)meP={x:sv[1],y:sv[2]};
+    else{
+      const i=localInput(),dx=(i.r?1:0)-(i.l?1:0),dy=(i.d?1:0)-(i.u?1:0),m=Math.hypot(dx,dy)||1;
+      move(meP,dx/m*230*dt,dy/m*230*dt);
+      const ex=sv[1]-meP.x,ey=sv[2]-meP.y;
+      if(Math.hypot(ex,ey)>40){const g=Math.min(1,dt*6);meP.x+=ex*g;meP.y+=ey*g}
+    }
+    me[1]=meP.x;me[2]=meP.y;me[3]=localInput().a;
+  }
+  const el=Math.min(.12,now-sn.rt);
+  return{p:out,b:sn.b.map(b=>[b[0]+b[2]*el,b[1]+b[3]*el]),sh:sn.sh};
+}
+
+/* ---------- Rendering ---------- */
+function enterGame(){
+  $("menu").style.display="none";$("game").style.display="flex";
+  const h=$("hud");h.hidden=false;
+  h.innerHTML=isHost?`Room <b>${room}</b> &nbsp; <a href="#" id="cp" style="color:#9aa6ba">copy invite link</a>`:`Room <b>${room}</b>`;
+  const cp=$("cp");if(cp)cp.onclick=e=>{e.preventDefault();navigator.clipboard.writeText(location.origin+location.pathname+"?room="+room);cp.textContent="copied"};
+}
+function draw(){const now=performance.now(),dt=Math.min(.05,(now-lastDraw)/1000);lastDraw=now;
+  const s=isHost?{p:Object.entries(players).map(([id,p])=>[id,p.x,p.y,p.a,p.hp,p.k,p.d,p.name,p.c,p.dead>0?1:0]),b:bullets.map(b=>[b.x,b.y]),sh:shots}:clientView(dt);
+  if(s&&s.sh!==undefined){if(s.sh>prevShots)sfxShot();prevShots=s.sh}
+  ctx.fillStyle="#232a36";ctx.fillRect(0,0,W,H);
+  ctx.strokeStyle="#2c3544";ctx.lineWidth=1;ctx.beginPath();
+  for(let x=0;x<=W;x+=50){ctx.moveTo(x,0);ctx.lineTo(x,H)}for(let y=0;y<=H;y+=50){ctx.moveTo(0,y);ctx.lineTo(W,y)}ctx.stroke();
+  ctx.fillStyle="#3a4558";for(const[a,b,w,h]of WALLS)ctx.fillRect(a,b,w,h);
+  if(!s){ctx.fillStyle="#9aa6ba";ctx.font="20px sans-serif";ctx.textAlign="center";ctx.fillText("Waiting for host...",W/2,H/2);return}
+  ctx.fillStyle="#ffe9b0";for(const b of s.b){ctx.beginPath();ctx.arc(b[0],b[1],4,0,7);ctx.fill()}
+  ctx.textAlign="center";ctx.font="bold 13px 'Chakra Petch',sans-serif";
+  for(const[id,x,y,a,hp,k,d,name,c,dead]of s.p){
+    if(prevHp[id]!==undefined&&hp<prevHp[id]){hitT[id]=0.25;if(id===myId){flash=0.45;sfxHurt()}}
+    prevHp[id]=hp;if(hitT[id]>0)hitT[id]-=dt;
+    if(dead){ctx.globalAlpha=.25}
+    ctx.strokeStyle=id===myId?"#fff":COLORS[c];ctx.lineWidth=id===myId?3:2;ctx.beginPath();ctx.arc(x,y,R+3,0,7);ctx.stroke();
+    steve(x,y,a,hitT[id]>0);
+    ctx.globalAlpha=1;
+    if(!dead){ctx.fillStyle="#161a22";ctx.fillRect(x-20,y-R-14,40,5);ctx.fillStyle=hp>40?"#06d6a0":"#ff6b57";ctx.fillRect(x-20,y-R-14,40*hp/100,5)}
+    ctx.fillStyle="#eef1f6";ctx.fillText(name,x,y+R+16);
+  }
+  if(flash>0){ctx.fillStyle="rgba(255,0,0,"+Math.min(.4,flash)+")";ctx.fillRect(0,0,W,H);flash-=dt}
+  const sorted=[...s.p].sort((a,b)=>b[5]-a[5]);
+  ctx.textAlign="right";ctx.font="14px 'Chakra Petch',sans-serif";
+  sorted.forEach((p,i)=>{ctx.fillStyle=COLORS[p[8]];ctx.fillText(`${p[7]}  ${p[5]} / ${p[6]}`,W-12,22+i*20)});
+  const me=s.p.find(p=>p[0]===myId);
+  if(me){
+    const hp=me[9]?0:Math.max(0,Math.ceil(me[4])),bx=16,by=H-42,bw=240,bh=28;
+    ctx.fillStyle="#161a22";ctx.fillRect(bx-3,by-3,bw+6,bh+6);
+    ctx.fillStyle=hp>50?"#06d6a0":hp>25?"#ffd166":"#ff4d4d";ctx.fillRect(bx,by,bw*hp/100,bh);
+    ctx.strokeStyle="#3a4558";ctx.lineWidth=2;ctx.strokeRect(bx-3,by-3,bw+6,bh+6);
+    ctx.textAlign="center";ctx.font="bold 18px 'Chakra Petch',sans-serif";
+    ctx.lineWidth=4;ctx.strokeStyle="#161a22";ctx.strokeText(hp+" / 100",bx+bw/2,by+20);
+    ctx.fillStyle="#fff";ctx.fillText(hp+" / 100",bx+bw/2,by+20);
+  }
+  if(me&&me[9]){ctx.textAlign="center";ctx.fillStyle="#eef1f6";ctx.font="bold 28px 'Chakra Petch',sans-serif";ctx.fillText("You were hit. Respawning...",W/2,60)}
+}
+
+/* ---------- Menu ---------- */
+$("name").value=localStorage.getItem("dustup-name")||"";
+const q=new URLSearchParams(location.search).get("room");if(q)$("code").value=q.toUpperCase().slice(0,4);
+function nm(){const n=$("name").value.trim()||"Player"+rnd(100);try{localStorage.setItem("dustup-name",n)}catch(e){}return n}
+$("host").onclick=()=>{initAudio();startHost(nm())};
+$("join").onclick=()=>{const c=$("code").value.trim();if(c.length!==4)return msg("Enter the 4-letter room code.");initAudio();startJoin(nm(),c)};
+</script>
+</body>
+</html>
