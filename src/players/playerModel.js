@@ -189,7 +189,7 @@ export function createLoadedPlayerModel(THREE, assetLoader, template, animations
     rightUpperLeg: findBone(/rightupleg/, /rightupperleg/, /rthigh$/),
     spine: findBone(/^spine\d*$/, /chest/)
   };
-  const weapon = createWeaponModel(THREE, hand ? 0.015 : 0.35);
+  const weapon = createWeaponModel(THREE, hand ? 1 : 0.35);
   if (hand) {
     weapon.position.set(0, -0.035, 0.055);
     weapon.rotation.set(Math.PI / 2, 0, Math.PI / 2);
