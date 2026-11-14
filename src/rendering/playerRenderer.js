@@ -1,5 +1,5 @@
-import { createPlayerModel, createLoadedPlayerModel } from "../players/playerModel.js";
-import { ASSET_MANIFEST } from "../assets/assetManifest.js?v=cyborg-20261114-1529";
+import { createPlayerModel, createLoadedPlayerModel } from "../players/playerModel.js?v=cyborg-rig-scale-v1";
+import { ASSET_MANIFEST } from "../assets/assetManifest.js?v=cyborg-rig-scale-v1";
 
 export class PlayerRenderer {
   constructor(state, THREE, soundManager, assetLoader, logger = () => {}) {
@@ -205,7 +205,10 @@ export class PlayerRenderer {
       this.updateAnimation(model, desired, deltaSeconds, movementDistance);
 
       model.position.set(x, z || 0, y);
-      model.rotation.y = -angle;
+      // The supplied cyborg and fallback rig face local +Z, while game yaw=0
+      // moves/aims along world +X. Rotate the model's forward axis into the
+      // game heading so the character faces the reticle instead of side-on.
+      model.rotation.y = Math.PI / 2 - angle;
       model.visible = !isDead || data.deathVisibleTime > 0;
 
       model.traverse(object => {
