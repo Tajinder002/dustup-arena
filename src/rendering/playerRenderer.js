@@ -1,5 +1,5 @@
-import { createPlayerModel, createLoadedPlayerModel } from "../players/playerModel.js?v=cyborg-rig-scale-v1";
-import { ASSET_MANIFEST } from "../assets/assetManifest.js?v=cyborg-rig-scale-v1";
+import { createPlayerModel, createLoadedPlayerModel } from "../players/playerModel.js?v=cyborg-pubg-v2";
+import { ASSET_MANIFEST } from "../assets/assetManifest.js?v=cyborg-pubg-v2";
 
 export class PlayerRenderer {
   constructor(state, THREE, soundManager, assetLoader, logger = () => {}) {
