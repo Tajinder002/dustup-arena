@@ -28,7 +28,8 @@ export class PlayerRenderer {
       this.characterTemplate = gltf.scene;
       this.characterAnimations = gltf.animations || [];
       this.characterReady = true;
-      this.logger(`Rigged character ready (${this.characterAnimations.length} animation clips).`);
+      const clipNames = this.characterAnimations.map(clip => clip.name || "unnamed").join(", ");
+      this.logger(`Rigged character ready (${this.characterAnimations.length} animation clips: ${clipNames || "none"}).`);
       return true;
     }).catch(error => {
       this.logger(`Rigged character unavailable; using generated human fallback: ${error.message}`);
@@ -94,7 +95,7 @@ export class PlayerRenderer {
     if (data.mixer) {
       const actions = data.actions || {};
       let next = actions[desired] || null;
-      if (!next && (desired === "run" || desired === "jump")) next = actions.walk || null;
+      if (!next && desired === "run") next = actions.walk || null;
       if (!next && (desired === "shoot" || desired === "reload")) next = actions.idle || null;
       if (next !== data.activeAction) {
         if (data.activeAction) data.activeAction.fadeOut(0.12);
@@ -127,13 +128,12 @@ export class PlayerRenderer {
       if (desired === "reload") data.arms[1].rotation.x = -0.72;
       else if (desired === "shoot") data.arms[1].rotation.x = -0.2;
       else data.arms[1].rotation.x *= 0.82;
-    } else {
-      const walkSwing = moving ? Math.sin(phase) * amplitude : 0;
-      if (procedural.leftUpperLeg) procedural.leftUpperLeg.rotation.x = walkSwing;
-      if (procedural.rightUpperLeg) procedural.rightUpperLeg.rotation.x = -walkSwing;
-      if (procedural.leftUpperArm) procedural.leftUpperArm.rotation.x = -walkSwing * 0.65;
+    } else if (!data.activeAction) {
+      // Do not overwrite the imported walk/run keyframes with procedural
+      // joint rotations. Only provide small pose fallbacks for actions absent
+      // from this asset (shoot, reload and jump).
       if (procedural.rightUpperArm) {
-        const target = desired === "reload" ? -0.72 : desired === "shoot" ? -0.38 : -walkSwing * 0.55;
+        const target = desired === "reload" ? -0.72 : desired === "shoot" ? -0.38 : 0;
         procedural.rightUpperArm.rotation.x += (target - procedural.rightUpperArm.rotation.x) * Math.min(1, deltaSeconds * 10);
       }
       if (procedural.spine && desired === "jump") {
