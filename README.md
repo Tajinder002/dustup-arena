@@ -9,13 +9,13 @@ Dustup Arena is a browser-based third-person city shooter for up to six players.
 - **PBR-style materials:** generated asphalt, concrete and masonry maps plus roughness and normal maps. Textures are generated at runtime and shared across the active map.
 - **Rendering:** ACES tone mapping, sRGB output, directional and hemisphere lighting, soft PC shadows on desktop, distance fog, environment reflections, and lower pixel ratio/shadows on touch devices.
 - **LOD and batching:** buildings have high/low detail levels; repeated windows and road markings use `InstancedMesh`.
-- **Characters:** a non-voxel human-shaped fallback is always available. A rigged, textured glTF character loads from `assets/models/characters/CesiumMan.glb` when downloaded, with remote fallback. Available animation clips are mapped by name through `AnimationMixer`; missing clips use procedural pose/recoil fallbacks.
+- **Player character:** the local `assets/models/characters/cyborg-rigged.glb` is loaded through Three.js GLTFLoader. The supplied file has a 24-joint skin and `walk`/`run` clips; the existing procedural human remains the fallback if the GLB is absent or fails to load. Player meshes do not cast city shadow-map shadows to reduce rendering cost.
 - **Asset pipeline:** GLTFLoader-based `AssetLoader`, promise-aware `ModelCache`, HDR environment loader, progress indicator, error handling and an optional asset-download script.
 - **Collision:** building footprints remain the same rectangles used by the host simulation and client prediction, so building visuals and movement/bullet colliders stay aligned.
 
 ## Important asset notes
 
-The city architecture, cars, street furniture and PBR-style texture maps are generated procedurally in JavaScript. They are detailed game geometry, not photogrammetry scans or imported photorealistic building GLBs. The rigged character, sample truck and HDRI are optional binary assets and are **not bundled in this prepared ZIP**; the asset folders contain placeholders until you run the downloader. The game works without them using the procedural human/vehicle models and generated environment reflections.
+The city architecture, cars, street furniture and PBR-style texture maps are generated procedurally in JavaScript. They are detailed game geometry, not photogrammetry scans or imported photorealistic building GLBs. The rigged cyborg character is expected at `assets/models/characters/cyborg-rigged.glb`. Add the supplied GLB at that exact path for the rigged player to appear; if it is missing or fails to load, the game uses the procedural human fallback. The sample truck and HDRI remain optional binary assets. The supplied cyborg contains two locomotion clips (`walk` and `run`), but no dedicated idle, shooting or reload clip. Its original redistribution license is not included in the GLB metadata and must be verified before public/commercial redistribution.
 
 To download the optional local files (requires internet):
 
