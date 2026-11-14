@@ -4,7 +4,7 @@
  */
 export const ASSET_MANIFEST = {
   character: {
-    local: "./assets/models/characters/cyborg-rigged.glb",
+    local: "./cyborg-rigged.glb",
     label: "Cyborg rigged player character",
     attribution: "User-supplied GLB; distribution license has not been independently verified"
   },
