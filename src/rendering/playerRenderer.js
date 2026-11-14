@@ -1,5 +1,5 @@
 import { createPlayerModel, createLoadedPlayerModel } from "../players/playerModel.js";
-import { ASSET_MANIFEST } from "../assets/assetManifest.js";
+import { ASSET_MANIFEST } from "../assets/assetManifest.js?v=cyborg-20261114-1529";
 
 export class PlayerRenderer {
   constructor(state, THREE, soundManager, assetLoader, logger = () => {}) {
