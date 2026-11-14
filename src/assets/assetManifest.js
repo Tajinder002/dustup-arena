@@ -1,13 +1,12 @@
 /**
- * Optional production assets. The project includes procedural fallbacks so it
- * remains playable before these binary files have been downloaded.
+ * Runtime assets used by Dustup Arena.
+ * The player character is supplied as a local GLB so every player loads the same rig.
  */
 export const ASSET_MANIFEST = {
   character: {
-    local: "./assets/models/characters/CesiumMan.glb",
-    remote: "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/main/Models/CesiumMan/glTF-Binary/CesiumMan.glb",
-    label: "Cesium Man character",
-    attribution: "Cesium, Khronos glTF Sample Assets (2017), CC BY 4.0"
+    local: "./assets/models/characters/cyborg-rigged.glb",
+    label: "Cyborg rigged player character",
+    attribution: "User-supplied GLB; distribution license has not been independently verified"
   },
   vehicle: {
     local: "./assets/models/vehicles/CesiumMilkTruck.glb",
