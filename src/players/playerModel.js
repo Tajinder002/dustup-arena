@@ -139,14 +139,36 @@ export function createLoadedPlayerModel(THREE, assetLoader, template, animations
     else if (object.material) object.material = object.material.clone();
   });
 
+  // The cyborg mesh accessor bounds describe the unskinned bind geometry,
+  // which is only about 1.8 cm tall because its Armature node carries a 0.01
+  // scale. Measuring that box makes the avatar ~100x too large once skinning
+  // applies the full bone transforms. Measure the actual world-space rig joints.
+  avatar.updateMatrixWorld(true);
+  const rigBounds = new THREE.Box3();
+  const bonePosition = new THREE.Vector3();
+  let boneCount = 0;
+  avatar.traverse(object => {
+    if (!object.isBone) return;
+    object.getWorldPosition(bonePosition);
+    rigBounds.expandByPoint(bonePosition);
+    boneCount += 1;
+  });
+
   const bounds = new THREE.Box3().setFromObject(avatar);
-  const size = new THREE.Vector3();
+  const geometrySize = new THREE.Vector3();
   const center = new THREE.Vector3();
-  bounds.getSize(size);
+  bounds.getSize(geometrySize);
   bounds.getCenter(center);
-  const scale = 43 / Math.max(size.y, 0.01);
+  const measuredHeight = boneCount >= 2
+    ? rigBounds.max.y - rigBounds.min.y
+    : geometrySize.y;
+  const targetHeight = 48;
+  const scale = targetHeight / Math.max(measuredHeight, 0.1);
   avatar.scale.setScalar(scale);
+  // The original GLB's feet already sit at local Y=0; use its mesh-space
+  // origin for ground alignment while taking scale from the articulated rig.
   avatar.position.set(-center.x * scale, -bounds.min.y * scale, -center.z * scale);
+  avatar.updateMatrixWorld(true);
   wrapper.add(avatar);
 
   // Add a compact weapon to a right-hand bone when the source rig exposes one.
