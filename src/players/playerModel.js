@@ -131,8 +131,10 @@ export function createLoadedPlayerModel(THREE, assetLoader, template, animations
   const avatar = assetLoader.cloneScene(template);
   avatar.traverse(object => {
     if (!object.isMesh) return;
-    object.castShadow = true;
-    object.receiveShadow = true;
+    // Skinned player meshes can be expensive to include in the city shadow map.
+    // Keep the character visually lit but exclude it from shadow-map passes.
+    object.castShadow = false;
+    object.receiveShadow = false;
     if (Array.isArray(object.material)) object.material = object.material.map(material => material.clone());
     else if (object.material) object.material = object.material.clone();
   });
@@ -192,12 +194,8 @@ export function createLoadedPlayerModel(THREE, assetLoader, template, animations
     if (clip) actions[name] = mixer.clipAction(clip);
   }
   if (!actions.walk && animations.length) actions.walk = mixer.clipAction(animations[0]);
-  if (!actions.idle && animations.length) {
-    const idleClip = animations.find(clip => /idle|stand|breath/i.test(clip.name));
-    // Some public sample rigs contain only one generically named clip. Keep it
-    // running at rest instead of leaving the rig in an unanimated bind pose.
-    actions.idle = mixer.clipAction(idleClip || animations[0]);
-  }
+  // This cyborg asset contains walk and run clips only. Do not play a
+  // locomotion clip as an idle animation; leave the rig in its neutral pose.
 
   const teamColor = new THREE.Color(PLAYER_COLORS[colorIndex % PLAYER_COLORS.length]);
   avatar.traverse(object => {
