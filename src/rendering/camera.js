@@ -12,11 +12,11 @@ export class CameraController {
     const sinePitch = Math.sin(state.pitch);
     const forwardX = Math.cos(state.yaw) * cosinePitch;
     const forwardZ = Math.sin(state.yaw) * cosinePitch;
-    const playerX = localPlayerRow[1] - Math.sin(state.yaw) * 10;
+    const playerX = localPlayerRow[1] - Math.sin(state.yaw) * 11;
     const playerY = (localPlayerRow[10] || 0) + 36;
-    const playerZ = localPlayerRow[2] + Math.cos(state.yaw) * 10;
+    const playerZ = localPlayerRow[2] + Math.cos(state.yaw) * 11;
 
-    let cameraDistance = 110;
+    let cameraDistance = 118;
     const cameraBlocked = distance => {
       const wallIndex = this.collisionManager.wallAt(
         playerX - forwardX * distance,
