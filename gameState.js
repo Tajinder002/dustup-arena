@@ -1,0 +1,78 @@
+import { WORLD_WIDTH, WORLD_HEIGHT, GAME_VERSION, MAGAZINE_SIZE } from "../config/gameConfig.js";
+import { MAPS } from "../maps/mapData.js";
+
+export function createGameState() {
+  return {
+    version: GAME_VERSION,
+    worldWidth: WORLD_WIDTH,
+    worldHeight: WORLD_HEIGHT,
+    magazineSize: MAGAZINE_SIZE,
+    mapIndex: 0,
+    walls: MAPS[0].walls,
+    wallHeights: MAPS[0].wallHeights,
+
+    peer: null,
+    isHost: false,
+    myId: null,
+    room: "",
+    hostConnection: null,
+    connections: {},
+    inputs: {},
+    players: {},
+    bullets: [],
+    snapshot: null,
+    snapshots: [],
+    offset: null,
+    localPlayer: null,
+    shotsFired: 0,
+    previousShots: 0,
+
+    keys: {},
+    mouse: { x: WORLD_WIDTH / 2, y: WORLD_HEIGHT / 2, down: false },
+    touchInput: { x: 0, y: 0, jump: false, reload: false },
+    isTouch: window.matchMedia("(pointer: coarse)").matches,
+    yaw: 0,
+    pitch: 0,
+    paused: false,
+    lastPointerLockChange: 0,
+
+    warning: "",
+    warningTime: 0,
+    warnedAboutVersion: false,
+    lastInputAt: {},
+    inputCounts: {},
+    debugLines: [],
+
+    localBullets: [],
+    localShotCooldown: 0,
+    localAmmo: MAGAZINE_SIZE,
+    lastLocalShotAt: 0,
+    pendingShots: 0,
+    wasDead: false,
+    localZ: 0,
+    localVerticalVelocity: 0,
+
+    scene: null,
+    camera: null,
+    renderer: null,
+    mapGroup: null,
+    ambientLight: null,
+    sunLight: null,
+    fillLight: null,
+    environmentTexture: null,
+    bulletGeometry: null,
+    bulletMaterial: null,
+    playerMeshes: {},
+    bulletMeshes: [],
+    hostDrawPositions: {},
+
+    previousHealth: {},
+    hitTimers: {},
+    damageFlash: 0,
+    previousReload: 0,
+    lastDrawTime: performance.now(),
+    animationFrame: null,
+    tickTimer: null,
+    diagnosticsTimer: null
+  };
+}

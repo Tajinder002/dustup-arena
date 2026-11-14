@@ -1,0 +1,64 @@
+#tc {
+  position: fixed;
+  z-index: 5;
+  inset: 0;
+  display: none;
+  pointer-events: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+#zl {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 45%;
+  height: 65%;
+  pointer-events: auto;
+  touch-action: none;
+}
+#zr {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 55%;
+  height: 100%;
+  pointer-events: auto;
+  touch-action: none;
+}
+#jb {
+  position: absolute;
+  display: none;
+  width: 130px;
+  height: 130px;
+  border: 2px solid #ffffff55;
+  border-radius: 50%;
+  background: #ffffff18;
+  transform: translate(-50%, -50%);
+}
+#jk {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 56px;
+  height: 56px;
+  margin: -28px;
+  border-radius: 50%;
+  background: #ffffff77;
+}
+.touch-button {
+  position: absolute;
+  width: auto;
+  padding: 0;
+  border: 2px solid #ffffff88;
+  border-radius: 50%;
+  background: #00000066;
+  color: #fff;
+  font: bold 15px sans-serif;
+  pointer-events: auto;
+  touch-action: none;
+}
+#bf { right: 28px; bottom: 36px; width: 96px; height: 96px; background: #c0392b99; }
+#bj { right: 140px; bottom: 28px; width: 68px; height: 68px; }
+#br { right: 36px; bottom: 150px; width: 60px; height: 60px; }
+#bfs { top: 12px; right: 12px; width: 44px; height: 44px; border-radius: 10px; }
+#bp { top: 12px; right: 64px; width: 44px; height: 44px; border-radius: 10px; }

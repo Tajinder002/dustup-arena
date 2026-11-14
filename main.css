@@ -1,0 +1,110 @@
+:root {
+  --bg: #161a22;
+  --panel: #232a36;
+  --line: #3a4558;
+  --text: #eef1f6;
+  --mute: #9aa6ba;
+  --accent: #ff6b57;
+}
+
+* { box-sizing: border-box; }
+html, body {
+  touch-action: none;
+  overscroll-behavior: none;
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--text);
+  font-family: "Chakra Petch", system-ui, sans-serif;
+}
+button, input, select { font: inherit; }
+button { cursor: pointer; }
+button:hover { filter: brightness(1.1); }
+input, select {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 10px;
+  border: 2px solid var(--line);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 16px;
+}
+input:focus, select:focus, button:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 1px;
+}
+button {
+  width: 100%;
+  padding: 12px;
+  border: 0;
+  border-radius: 8px;
+  background: var(--accent);
+  color: #1a0d0a;
+  font-weight: 700;
+  font-size: 16px;
+}
+button.alt {
+  border: 2px solid var(--line);
+  background: transparent;
+  color: var(--text);
+}
+.card {
+  position: relative;
+  width: 100%;
+  max-width: 400px;
+  margin: auto;
+  padding: 26px;
+  border: 1px solid #ffffff22;
+  border-radius: 18px;
+  background: #1c222dd9;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 20px 60px #000a;
+}
+.logo {
+  color: transparent;
+  background: linear-gradient(90deg, #ff6b57, #ffb457);
+  background-clip: text;
+  -webkit-background-clip: text;
+  font-size: 40px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  line-height: 1;
+}
+.logo span {
+  display: block;
+  margin-top: 6px;
+  color: var(--mute);
+  -webkit-text-fill-color: var(--mute);
+  font-size: 14px;
+  letter-spacing: 6px;
+}
+.small-copy { margin: 0 0 18px; color: var(--mute); font-size: 14px; }
+
+.asset-loading {
+  margin-top: 12px;
+  padding: 10px 12px;
+  border: 1px solid #ffffff24;
+  border-radius: 9px;
+  background: #111722b8;
+  color: var(--mute);
+  font-size: 12px;
+  letter-spacing: 0.3px;
+}
+.asset-progress-track {
+  height: 5px;
+  margin-top: 8px;
+  overflow: hidden;
+  border-radius: 10px;
+  background: #465061;
+}
+.asset-progress-track span {
+  display: block;
+  width: 4%;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #ff6b57, #ffc06a);
+  transition: width 0.18s ease;
+}
