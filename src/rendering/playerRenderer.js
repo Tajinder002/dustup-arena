@@ -1,5 +1,5 @@
-import { createPlayerModel, createLoadedPlayerModel } from "../players/playerModel.js?v=cyborg-motion-v2";
-import { ASSET_MANIFEST } from "../assets/assetManifest.js?v=cyborg-motion-v2";
+import { createPlayerModel, createLoadedPlayerModel } from "../players/playerModel.js?v=cyborg-shoot-overlay-v3";
+import { ASSET_MANIFEST } from "../assets/assetManifest.js?v=cyborg-shoot-overlay-v3";
 
 function wrapAngle(angle) {
   return Math.atan2(Math.sin(angle), Math.cos(angle));
@@ -81,6 +81,18 @@ export class PlayerRenderer {
     const ammo = row[11] ?? 30;
     const reloadProgress = row[12] || 0;
 
+    // Shooting and reloading are overlays, not full-body locomotion states.
+    // This GLB only contains walk/run clips. Switching to a nonexistent
+    // shoot/reload clip fades out the gait and leaves the rig in bind pose.
+    // Keep those actions independent so sprinting/jumping continues while firing.
+    if (animation.previousAmmo !== undefined && ammo < animation.previousAmmo) {
+      animation.shotPulse = 0.14;
+    }
+    animation.previousAmmo = ammo;
+    animation.isReloading = reloadProgress > 0;
+    animation.shotPulse = Math.max(0, (animation.shotPulse || 0) - deltaSeconds);
+    animation.isShooting = animation.shotPulse > 0;
+
     // Hysteresis stabilizes locomotion state across interpolated network frames.
     animation.isMoving = animation.isMoving
       ? animation.motionSpeed > 12
@@ -91,15 +103,6 @@ export class PlayerRenderer {
 
     if (dead) return "death";
     if (verticalOffset > 1) return "jump";
-    if (reloadProgress > 0) return "reload";
-    if (animation.previousAmmo !== undefined && ammo < animation.previousAmmo) {
-      animation.shootTime = 0.14;
-    }
-    animation.previousAmmo = ammo;
-    if (animation.shootTime > 0) {
-      animation.shootTime = Math.max(0, animation.shootTime - deltaSeconds);
-      return "shoot";
-    }
     if (animation.isMoving) return animation.isRunning ? "run" : "walk";
     return "idle";
   }
@@ -124,7 +127,8 @@ export class PlayerRenderer {
       let next = actions[desired] || null;
       if (!next && desired === "run") next = actions.walk || null;
       if (!next && desired === "jump") next = actions.walk || null;
-      if (!next && (desired === "shoot" || desired === "reload")) next = actions.idle || null;
+      // No shoot/reload action exists in this asset. Preserve the current
+      // locomotion clip instead of fading it out when the trigger is pressed.
 
       const reverse = (desired === "walk" || desired === "run") && data.reverseDirection;
       if (next !== data.activeAction || reverse !== data.activeReverse) {
