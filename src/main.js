@@ -2,7 +2,7 @@ import { createGameState } from "./state/gameState.js";
 import { AssetLoader } from "./assets/assetLoader.js";
 import { SoundManager } from "./audio/soundManager.js";
 import { CollisionManager } from "./game/collisionManager.js";
-import { GameSimulation } from "./game/gameSimulation.js";
+import { GameSimulation } from "./game/gameSimulation.js?v=city-combat-v2";
 import { ClientPrediction } from "./game/clientPrediction.js";
 import { InputManager } from "./input/inputManager.js";
 import { MapManager } from "./maps/mapManager.js?v=city-combat-v2";
@@ -16,7 +16,7 @@ import { MenuManager } from "./ui/menu.js";
 import { PauseMenu } from "./ui/pauseMenu.js";
 import { DebugLogger } from "./utils/debugLogger.js";
 import { $, setMessage } from "./utils/dom.js";
-import { MAPS } from "./maps/mapData.js";
+import { MAPS } from "./maps/mapData.js?v=city-combat-v2";
 
 class DustupArenaGame {
   constructor(THREE, Peer) {
