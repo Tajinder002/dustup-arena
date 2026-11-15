@@ -8,9 +8,10 @@ export function createWeaponModel(THREE, scale = 1) {
   const polymer = new THREE.MeshLambertMaterial({ color: 0x181d22 });
   const steel = new THREE.MeshLambertMaterial({ color: 0x626d76 });
 
-  const add = (geometry, material, x, y, z) => {
+  const add = (geometry, material, x, y, z, rotation = null) => {
     const mesh = new THREE.Mesh(geometry, material);
     mesh.position.set(x, y, z);
+    if (rotation) mesh.rotation.set(rotation.x || 0, rotation.y || 0, rotation.z || 0);
     mesh.castShadow = false;
     mesh.receiveShadow = false;
     weapon.add(mesh);
