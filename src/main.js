@@ -5,10 +5,10 @@ import { CollisionManager } from "./game/collisionManager.js";
 import { GameSimulation } from "./game/gameSimulation.js?v=pubg-aim-v1";
 import { ClientPrediction } from "./game/clientPrediction.js?v=pubg-aim-v1";
 import { InputManager } from "./input/inputManager.js?v=pubg-aim-v1";
-import { MapManager } from "./maps/mapManager.js?v=dark-style-v1";
+import { MapManager } from "./maps/mapManager.js?v=color-refresh-v2";
 import { PeerManager } from "./networking/peerManager.js?v=pubg-aim-v1";
 import { SceneManager } from "./rendering/scene.js?v=pubg-aim-v1";
-import { PlayerRenderer } from "./rendering/playerRenderer.js?v=dark-style-v1";
+import { PlayerRenderer } from "./rendering/playerRenderer.js?v=color-refresh-v2";
 import { CameraController } from "./rendering/camera.js?v=pubg-aim-v1";
 import { HudRenderer } from "./rendering/hudRenderer.js?v=pubg-aim-v1";
 import { GameRenderer } from "./rendering/renderer.js";
@@ -16,7 +16,7 @@ import { MenuManager } from "./ui/menu.js?v=pubg-aim-v1";
 import { PauseMenu } from "./ui/pauseMenu.js";
 import { DebugLogger } from "./utils/debugLogger.js";
 import { $, setMessage } from "./utils/dom.js";
-import { MAPS } from "./maps/mapData.js?v=dark-style-v1";
+import { MAPS } from "./maps/mapData.js?v=color-refresh-v2";
 
 class DustupArenaGame {
   constructor(THREE, Peer) {
