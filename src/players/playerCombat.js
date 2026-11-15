@@ -1,4 +1,4 @@
-import { MAGAZINE_SIZE, RELOAD_SECONDS } from "../config/gameConfig.js";
+import { MAGAZINE_SIZE, RELOAD_SECONDS, BULLET_SPEED } from "../config/gameConfig.js";
 
 export class PlayerCombat {
   constructor(state) {
@@ -36,9 +36,9 @@ export class PlayerCombat {
         x: player.x - sineAngle * 10 + cosineAngle * radius,
         y: player.y + cosineAngle * 10 + sineAngle * radius,
         z: player.z + 36,
-        vx: cosineAngle * cosinePitch * 1000,
-        vy: sineAngle * cosinePitch * 1000,
-        vz: sinePitch * 1000,
+        vx: cosineAngle * cosinePitch * BULLET_SPEED,
+        vy: sineAngle * cosinePitch * BULLET_SPEED,
+        vz: sinePitch * BULLET_SPEED,
         ownerId: playerId,
         colorIndex: player.colorIndex,
         lifetime: 2
