@@ -1,4 +1,4 @@
-import { PLAYER_COLORS, MAGAZINE_SIZE } from "../config/gameConfig.js";
+import { PLAYER_COLORS, MAGAZINE_SIZE } from "../config/gameConfig.js?v=pubg-aim-v1";
 
 export class HudRenderer {
   constructor(state, THREE) {
@@ -31,18 +31,38 @@ export class HudRenderer {
 
   drawCrosshair(canvasWidth, canvasHeight) {
     const context = this.state.hudContext;
-    context.strokeStyle = "#fff";
-    context.lineWidth = 2;
+    const centerX = canvasWidth / 2;
+    const centerY = canvasHeight / 2;
+    context.lineCap = "square";
+    context.strokeStyle = "rgba(0, 0, 0, 0.72)";
+    context.lineWidth = 4;
     context.beginPath();
-    context.moveTo(canvasWidth / 2 - 12, canvasHeight / 2);
-    context.lineTo(canvasWidth / 2 - 4, canvasHeight / 2);
-    context.moveTo(canvasWidth / 2 + 4, canvasHeight / 2);
-    context.lineTo(canvasWidth / 2 + 12, canvasHeight / 2);
-    context.moveTo(canvasWidth / 2, canvasHeight / 2 - 12);
-    context.lineTo(canvasWidth / 2, canvasHeight / 2 - 4);
-    context.moveTo(canvasWidth / 2, canvasHeight / 2 + 4);
-    context.lineTo(canvasWidth / 2, canvasHeight / 2 + 12);
+    context.moveTo(centerX - 11, centerY);
+    context.lineTo(centerX - 5, centerY);
+    context.moveTo(centerX + 5, centerY);
+    context.lineTo(centerX + 11, centerY);
+    context.moveTo(centerX, centerY - 11);
+    context.lineTo(centerX, centerY - 5);
+    context.moveTo(centerX, centerY + 5);
+    context.lineTo(centerX, centerY + 11);
     context.stroke();
+
+    context.strokeStyle = "#f7f8fa";
+    context.lineWidth = 1.6;
+    context.beginPath();
+    context.moveTo(centerX - 11, centerY);
+    context.lineTo(centerX - 5, centerY);
+    context.moveTo(centerX + 5, centerY);
+    context.lineTo(centerX + 11, centerY);
+    context.moveTo(centerX, centerY - 11);
+    context.lineTo(centerX, centerY - 5);
+    context.moveTo(centerX, centerY + 5);
+    context.lineTo(centerX, centerY + 11);
+    context.stroke();
+    context.fillStyle = "#fff";
+    context.beginPath();
+    context.arc(centerX, centerY, 1.7, 0, Math.PI * 2);
+    context.fill();
   }
 
   drawDamageFlash(canvasWidth, canvasHeight, deltaSeconds) {
