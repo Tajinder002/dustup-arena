@@ -1,4 +1,4 @@
-import { MAPS } from "./mapData.js";
+import { MAPS } from "./mapData.js?v=city-combat-v2";
 import { MapRenderer } from "./mapRenderer.js?v=city-combat-v2";
 
 export class MapManager {
