@@ -1,5 +1,13 @@
-import { createPlayerModel, createLoadedPlayerModel } from "../players/playerModel.js?v=cyborg-pubg-v3";
-import { ASSET_MANIFEST } from "../assets/assetManifest.js?v=cyborg-pubg-v3";
+import { createPlayerModel, createLoadedPlayerModel } from "../players/playerModel.js?v=cyborg-motion-v1";
+import { ASSET_MANIFEST } from "../assets/assetManifest.js?v=cyborg-motion-v1";
+
+function wrapAngle(angle) {
+  return Math.atan2(Math.sin(angle), Math.cos(angle));
+}
+
+function clamp(value, minimum, maximum) {
+  return Math.max(minimum, Math.min(maximum, value));
+}
 
 export class PlayerRenderer {
   constructor(state, THREE, soundManager, assetLoader, logger = () => {}) {
@@ -66,13 +74,20 @@ export class PlayerRenderer {
     return model;
   }
 
-  getDesiredAnimation(model, row, movementDistance, deltaSeconds) {
+  getDesiredAnimation(model, row, deltaSeconds) {
     const animation = model.userData;
     const dead = Boolean(row[9]);
     const verticalOffset = row[10] || 0;
     const ammo = row[11] ?? 30;
     const reloadProgress = row[12] || 0;
-    const speed = deltaSeconds > 0 ? movementDistance / deltaSeconds : 0;
+
+    // Hysteresis stabilizes locomotion state across interpolated network frames.
+    animation.isMoving = animation.isMoving
+      ? animation.motionSpeed > 12
+      : animation.motionSpeed > 22;
+    animation.isRunning = animation.isRunning
+      ? animation.motionSpeed > 175
+      : animation.motionSpeed > 210;
 
     if (dead) return "death";
     if (verticalOffset > 1) return "jump";
@@ -85,40 +100,70 @@ export class PlayerRenderer {
       animation.shootTime = Math.max(0, animation.shootTime - deltaSeconds);
       return "shoot";
     }
-    if (movementDistance > 0.5) return speed > 250 ? "run" : "walk";
+    if (animation.isMoving) return animation.isRunning ? "run" : "walk";
     return "idle";
   }
 
-  updateAnimation(model, desired, deltaSeconds, movementDistance) {
+  updateAnimation(model, desired, deltaSeconds, torsoAimOffset) {
     const data = model.userData;
     data.currentAnimation = desired;
+
+    // Undo last frame's additive torso twist before the mixer writes its next
+    // walk/run pose; this keeps the offset from accumulating every render.
+    const twistBones = data.aimTwistBones || [];
+    const axis = data.twistAxis || (data.twistAxis = new this.THREE.Vector3(0, 1, 0));
+    for (const entry of twistBones) {
+      if (!entry.appliedAngle) continue;
+      entry.tempQuaternion.setFromAxisAngle(axis, -entry.appliedAngle);
+      entry.bone.quaternion.multiply(entry.tempQuaternion);
+      entry.appliedAngle = 0;
+    }
+
     if (data.mixer) {
       const actions = data.actions || {};
       let next = actions[desired] || null;
       if (!next && desired === "run") next = actions.walk || null;
+      if (!next && desired === "jump") next = actions.walk || null;
       if (!next && (desired === "shoot" || desired === "reload")) next = actions.idle || null;
-      if (next !== data.activeAction) {
+
+      const reverse = (desired === "walk" || desired === "run") && data.reverseDirection;
+      if (next !== data.activeAction || reverse !== data.activeReverse) {
         if (data.activeAction) data.activeAction.fadeOut(0.12);
         if (next) {
           next.reset();
           next.enabled = true;
           next.setEffectiveWeight(1);
-          next.setEffectiveTimeScale(desired === "run" ? 1.25 : 1);
-          next.setLoop(desired === "death" ? this.THREE.LoopOnce : this.THREE.LoopRepeat, desired === "death" ? 1 : Infinity);
-          next.clampWhenFinished = desired === "death";
+          const speedScale = desired === "run"
+            ? clamp(data.motionSpeed / 260, 1, 1.35)
+            : clamp(data.motionSpeed / 135, 0.72, 1.2);
+          next.setLoop(this.THREE.LoopRepeat, Infinity);
+          next.clampWhenFinished = false;
+          // The supplied GLB has forward locomotion clips only. Reverse the
+          // same gait for backpedaling without turning the rifle away from aim.
+          next.time = reverse ? next.getClip().duration : 0;
+          next.setEffectiveTimeScale(reverse ? -speedScale : speedScale);
           next.fadeIn(0.14).play();
         }
         data.activeAction = next;
+        data.activeReverse = reverse;
       }
       data.mixer.update(deltaSeconds);
     }
 
-    const phase = performance.now() * (desired === "run" ? 0.018 : 0.012);
+    // Turn the upper torso back toward the aim/camera yaw while the lower body
+    // follows travel direction, creating a controllable third-person strafe.
+    for (const entry of twistBones) {
+      const applied = torsoAimOffset * entry.weight;
+      if (!applied) continue;
+      entry.tempQuaternion.setFromAxisAngle(axis, applied);
+      entry.bone.quaternion.multiply(entry.tempQuaternion);
+      entry.appliedAngle = applied;
+    }
+
     const moving = desired === "walk" || desired === "run";
     const amplitude = moving ? (desired === "run" ? 0.72 : 0.43) : 0;
-    const procedural = data.proceduralBones || {};
     if (data.isFallback) {
-      data.phase += Math.min(movementDistance, 40) * 0.075;
+      data.phase += Math.max(0, data.motionSpeed) * deltaSeconds * 0.075;
       data.movementAmount += (amplitude - data.movementAmount) * Math.min(1, deltaSeconds * 9);
       const swing = Math.sin(data.phase) * data.movementAmount;
       data.legs[0].rotation.x = swing;
@@ -129,9 +174,7 @@ export class PlayerRenderer {
       else if (desired === "shoot") data.arms[1].rotation.x = -0.2;
       else data.arms[1].rotation.x *= 0.82;
     } else if (!data.activeAction) {
-      // Do not overwrite the imported walk/run keyframes with procedural
-      // joint rotations. Only provide small pose fallbacks for actions absent
-      // from this asset (shoot, reload and jump).
+      const procedural = data.proceduralBones || {};
       if (procedural.rightUpperArm) {
         const target = desired === "reload" ? -0.72 : desired === "shoot" ? -0.38 : 0;
         procedural.rightUpperArm.rotation.x += (target - procedural.rightUpperArm.rotation.x) * Math.min(1, deltaSeconds * 10);
@@ -187,9 +230,15 @@ export class PlayerRenderer {
       if (state.hitTimers[playerId] > 0) state.hitTimers[playerId] -= deltaSeconds;
 
       const data = model.userData;
-      const movementDistance = data.lastX === null ? 0 : Math.hypot(x - data.lastX, y - data.lastY);
+      const deltaX = data.lastX === null ? 0 : x - data.lastX;
+      const deltaY = data.lastX === null ? 0 : y - data.lastY;
+      const movementDistance = Math.hypot(deltaX, deltaY);
+      const instantSpeed = deltaSeconds > 0 ? movementDistance / deltaSeconds : 0;
+      const speedResponse = 1 - Math.exp(-deltaSeconds * 12);
+      data.motionSpeed += (instantSpeed - data.motionSpeed) * speedResponse;
       data.lastX = x;
       data.lastY = y;
+      if (movementDistance > 0.001) data.moveAngle = Math.atan2(deltaY, deltaX);
       const previousAmmo = data.previousAmmo;
       if (previousAmmo !== undefined && row[11] < previousAmmo && data.weapon) {
         data.weapon.userData.recoil = 1;
@@ -201,14 +250,28 @@ export class PlayerRenderer {
       if (isDead) data.deathVisibleTime = Math.max(0, data.deathVisibleTime - deltaSeconds);
       else data.deathVisibleTime = 0;
 
-      const desired = this.getDesiredAnimation(model, row, movementDistance, deltaSeconds);
-      this.updateAnimation(model, desired, deltaSeconds, movementDistance);
+      const desired = this.getDesiredAnimation(model, row, deltaSeconds);
+      const moving = data.isMoving;
+      const moveAngle = moving && data.moveAngle !== null && data.moveAngle !== undefined
+        ? data.moveAngle
+        : angle;
+      const movementOffset = wrapAngle(moveAngle - angle);
+      const backpedaling = moving && Math.abs(movementOffset) > 2.15;
+      data.reverseDirection = backpedaling;
+
+      // The body turns partway into a strafe. The spine chain counters the
+      // turn so the hands/rifle remain oriented toward the player's aim yaw.
+      const bodyTarget = !moving || backpedaling
+        ? angle
+        : angle + clamp(movementOffset, -0.72, 0.72);
+      if (data.bodyAngle === null || data.bodyAngle === undefined) data.bodyAngle = bodyTarget;
+      data.bodyAngle += wrapAngle(bodyTarget - data.bodyAngle) * Math.min(1, deltaSeconds * 11);
+      const torsoAimOffset = clamp(wrapAngle(angle - data.bodyAngle), -0.78, 0.78);
+
+      this.updateAnimation(model, desired, deltaSeconds, torsoAimOffset);
 
       model.position.set(x, z || 0, y);
-      // The supplied cyborg and fallback rig face local +Z, while game yaw=0
-      // moves/aims along world +X. Rotate the model's forward axis into the
-      // game heading so the character faces the reticle instead of side-on.
-      model.rotation.y = Math.PI / 2 - angle;
+      model.rotation.y = Math.PI / 2 - data.bodyAngle;
       model.visible = !isDead || data.deathVisibleTime > 0;
 
       model.traverse(object => {
