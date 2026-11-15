@@ -8,7 +8,7 @@ import { InputManager } from "./input/inputManager.js";
 import { MapManager } from "./maps/mapManager.js?v=simple-world-v4";
 import { PeerManager } from "./networking/peerManager.js";
 import { SceneManager } from "./rendering/scene.js?v=simple-world-v4";
-import { PlayerRenderer } from "./rendering/playerRenderer.js?v=simple-world-v4";
+import { PlayerRenderer } from "./rendering/playerRenderer.js?v=steve-character-v1";
 import { CameraController } from "./rendering/camera.js?v=simple-world-v4";
 import { HudRenderer } from "./rendering/hudRenderer.js";
 import { GameRenderer } from "./rendering/renderer.js";
