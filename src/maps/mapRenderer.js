@@ -1,4 +1,4 @@
-import { MAPS } from "./mapData.js?v=pubg-aim-v1";
+import { MAPS } from "./mapData.js?v=dark-style-v1";
 import { WORLD_WIDTH, WORLD_HEIGHT } from "../config/gameConfig.js?v=pubg-aim-v1";
 import { ASSET_MANIFEST } from "../assets/assetManifest.js";
 
