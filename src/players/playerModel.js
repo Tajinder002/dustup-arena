@@ -187,8 +187,21 @@ export function createLoadedPlayerModel(THREE, assetLoader, template, animations
     rightUpperArm: findBone(/rightarm$/, /rightupperarm/, /rupperarm$/),
     leftUpperLeg: findBone(/leftupleg/, /leftupperleg/, /lthigh$/),
     rightUpperLeg: findBone(/rightupleg/, /rightupperleg/, /rthigh$/),
-    spine: findBone(/^spine\d*$/, /chest/)
+    spine: findBone(/^spine\\d*$/, /chest/)
   };
+  // Use the cyborg's real torso chain for aim offsets while the hips turn
+  // toward travel. The animation mixer pose is restored before each offset.
+  const aimTwistBones = [
+    { bone: findBone(/^spine$/), weight: 0.20 },
+    { bone: findBone(/^spine01$/), weight: 0.28 },
+    { bone: findBone(/^spine02$/), weight: 0.30 },
+    { bone: findBone(/^neck$/), weight: 0.12 },
+    { bone: findBone(/^head$/), weight: 0.10 }
+  ].filter(entry => entry.bone).map(entry => ({
+    ...entry,
+    appliedAngle: 0,
+    tempQuaternion: new THREE.Quaternion()
+  }));
   const weapon = createWeaponModel(THREE, hand ? 1 : 0.35);
   if (hand) {
     weapon.position.set(0, -0.035, 0.055);
@@ -250,6 +263,15 @@ export function createLoadedPlayerModel(THREE, assetLoader, template, animations
     currentAnimation: "idle",
     materials: [],
     proceduralBones,
+    aimTwistBones,
+    bodyAngle: null,
+    moveAngle: null,
+    motionSpeed: 0,
+    isMoving: false,
+    isRunning: false,
+    reverseDirection: false,
+    activeReverse: false,
+    twistAxis: new THREE.Vector3(0, 1, 0),
     hitMaterial: null
   };
   return wrapper;
