@@ -1,4 +1,4 @@
-import { ROOM_PREFIX, MAX_PLAYERS } from "../config/gameConfig.js";
+import { ROOM_PREFIX, MAX_PLAYERS } from "../config/gameConfig.js?v=city-combat-v2";
 import { createRoomCode } from "../utils/roomCode.js";
 import { setMessage } from "../utils/dom.js";
 
