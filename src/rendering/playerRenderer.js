@@ -1,4 +1,4 @@
-import { createPlayerModel } from "../players/playerModel.js?v=steve-character-v1";
+import { createPlayerModel } from "../players/playerModel.js?v=city-combat-v2";
 
 function wrapAngle(angle) {
   return Math.atan2(Math.sin(angle), Math.cos(angle));
@@ -135,11 +135,15 @@ export class PlayerRenderer {
       const swing = Math.sin(data.phase) * data.movementAmount;
       data.legs[0].rotation.x = swing;
       data.legs[1].rotation.x = -swing;
-      data.arms[0].rotation.x = -swing * 0.4;
-      data.arms[1].rotation.x = swing * 0.2;
-      if (desired === "reload") data.arms[1].rotation.x = -0.72;
-      else if (desired === "shoot") data.arms[1].rotation.x = -0.2;
-      else data.arms[1].rotation.x *= 0.82;
+
+      // Steve holds a raised rifle-ready pose while the arms subtly counter-swing.
+      const armBaseX = data.armBaseX || [0, 0];
+      data.arms[0].rotation.x = armBaseX[0] - swing * 0.22;
+      data.arms[1].rotation.x = armBaseX[1] + swing * 0.14;
+      if (data.head) {
+        data.head.position.y = data.headBaseY
+          + Math.abs(Math.sin(data.phase * 2)) * data.movementAmount * 0.65;
+      }
     } else if (!data.activeAction) {
       const procedural = data.proceduralBones || {};
       if (procedural.rightUpperArm) {
