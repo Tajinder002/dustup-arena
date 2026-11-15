@@ -157,6 +157,20 @@ export function createLoadedPlayerModel(THREE, assetLoader, template, animations
     object.material = flatCharacterMaterial;
   });
 
+  // Measure the articulated skeleton before normalizing. The source GLB
+  // stores its mesh under a 0.01-scaled armature, so the raw geometry bounds
+  // alone are not a reliable character-height measurement.
+  avatar.updateMatrixWorld(true);
+  const rigBounds = new THREE.Box3();
+  const bonePosition = new THREE.Vector3();
+  let boneCount = 0;
+  avatar.traverse(object => {
+    if (!object.isBone) return;
+    object.getWorldPosition(bonePosition);
+    rigBounds.expandByPoint(bonePosition);
+    boneCount += 1;
+  });
+
   const bounds = new THREE.Box3().setFromObject(avatar);
   const geometrySize = new THREE.Vector3();
   const center = new THREE.Vector3();
