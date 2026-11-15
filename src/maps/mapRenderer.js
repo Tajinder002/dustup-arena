@@ -41,9 +41,13 @@ export class MapRenderer {
   buildMinimalMap(map) {
     const THREE = this.THREE;
     const group = this.state.mapGroup;
+    const walls = map.walls || [];
     const groundMaterial = new THREE.MeshBasicMaterial({ color: map.ground || 0x64696e });
     const roadMaterial = new THREE.MeshBasicMaterial({ color: 0x292d33 });
     const buildingMaterial = new THREE.MeshLambertMaterial({ color: 0xffffff });
+    const windowMaterial = new THREE.MeshLambertMaterial({ color: map.style === "tokyo" ? 0x88a9ba : 0x26333d });
+    const roofMaterial = new THREE.MeshLambertMaterial({ color: 0x30363c });
+    const rooftopMaterial = new THREE.MeshLambertMaterial({ color: map.accent || 0x8b7b63 });
 
     const addFlatPlane = (x, y, z, width, depth, material) => {
       const plane = new THREE.Mesh(new THREE.PlaneGeometry(width, depth), material);
@@ -55,8 +59,7 @@ export class MapRenderer {
       return plane;
     };
 
-    // Plain ground and unmarked roads only: no kerbs, lane paint, crossings,
-    // sidewalks, signs, parks, trees, vehicles or decorative props.
+    // Large open ground and the main unmarked avenues.
     addFlatPlane(
       WORLD_WIDTH / 2,
       -1.15,
@@ -71,32 +74,109 @@ export class MapRenderer {
     verticalRoads.forEach(x => addFlatPlane(x, -0.35, WORLD_HEIGHT / 2, 154, WORLD_HEIGHT, roadMaterial));
     horizontalRoads.forEach(z => addFlatPlane(WORLD_WIDTH / 2, -0.32, z, WORLD_WIDTH, 148, roadMaterial));
 
-    // Retain every gameplay collision building as one flat instanced box.
-    const walls = map.walls || [];
-    if (walls.length) {
-      const geometry = new THREE.BoxGeometry(1, 1, 1);
-      const buildings = new THREE.InstancedMesh(geometry, buildingMaterial, walls.length);
-      const dummy = new THREE.Object3D();
-      walls.forEach(([x, z, width, depth], index) => {
-        const height = Math.max(8, map.heightAt(index));
-        dummy.position.set(x + width / 2, height / 2, z + depth / 2);
-        dummy.scale.set(width, height, depth);
-        dummy.updateMatrix();
-        buildings.setMatrixAt(index, dummy.matrix);
-        const tint = map.tint?.[index % (map.tint?.length || 1)] ?? 0x7b838b;
-        buildings.setColorAt(index, new THREE.Color(tint));
-      });
-      buildings.instanceMatrix.needsUpdate = true;
-      if (buildings.instanceColor) buildings.instanceColor.needsUpdate = true;
-      // Three.js r128 InstancedMesh has no computeBoundingSphere() method.
-      // Disable frustum culling so the instanced city blocks always render.
-      buildings.frustumCulled = false;
-      buildings.castShadow = false;
-      buildings.receiveShadow = false;
-      group.add(buildings);
-    }
-  }
+    // All building shells are batched in one instanced draw call.
+    if (!walls.length) return;
+    const unitBox = new THREE.BoxGeometry(1, 1, 1);
+    const buildings = new THREE.InstancedMesh(unitBox, buildingMaterial, walls.length);
+    const roofTrims = new THREE.InstancedMesh(unitBox, roofMaterial, walls.length);
+    const rooftopCount = Math.ceil(walls.length / 2);
+    const rooftopUnits = new THREE.InstancedMesh(unitBox, rooftopMaterial, rooftopCount);
+    const buildingData = walls.map(([x, z, width, depth], index) => ({
+      x, z, width, depth, height: Math.max(8, map.heightAt(index))
+    }));
 
+    let windowCount = 0;
+    for (const building of buildingData) {
+      const floors = Math.max(2, Math.min(5, Math.floor(building.height / 70)));
+      const frontColumns = Math.max(2, Math.min(5, Math.floor(building.width / 50)));
+      const sideColumns = Math.max(2, Math.min(5, Math.floor(building.depth / 50)));
+      windowCount += floors * 2 * (frontColumns + sideColumns);
+    }
+    const facadeWindows = new THREE.InstancedMesh(unitBox, windowMaterial, windowCount);
+    const dummy = new THREE.Object3D();
+    let windowIndex = 0;
+    let roofIndex = 0;
+
+    buildingData.forEach((building, index) => {
+      const { x, z, width, depth, height } = building;
+      const centerX = x + width / 2;
+      const centerZ = z + depth / 2;
+
+      dummy.position.set(centerX, height / 2, centerZ);
+      dummy.scale.set(width, height, depth);
+      dummy.rotation.set(0, 0, 0);
+      dummy.updateMatrix();
+      buildings.setMatrixAt(index, dummy.matrix);
+      const tint = map.tint?.[index % (map.tint?.length || 1)] ?? 0x7b838b;
+      buildings.setColorAt(index, new THREE.Color(tint));
+
+      // Thin roof lip and a small rooftop utility block add a simple city
+      // silhouette without creating separate draw calls for each building.
+      dummy.position.set(centerX, height + 1.1, centerZ);
+      dummy.scale.set(width + 5, 2.2, depth + 5);
+      dummy.updateMatrix();
+      roofTrims.setMatrixAt(index, dummy.matrix);
+
+      if (index % 2 === 0) {
+        dummy.position.set(
+          centerX + ((index % 3) - 1) * width * 0.18,
+          height + 5,
+          centerZ - depth * 0.12
+        );
+        dummy.scale.set(Math.min(22, width * 0.24), 8, Math.min(22, depth * 0.24));
+        dummy.updateMatrix();
+        rooftopUnits.setMatrixAt(roofIndex, dummy.matrix);
+        roofIndex += 1;
+      }
+
+      const floors = Math.max(2, Math.min(5, Math.floor(height / 70)));
+      const frontColumns = Math.max(2, Math.min(5, Math.floor(width / 50)));
+      const sideColumns = Math.max(2, Math.min(5, Math.floor(depth / 50)));
+      const windowHeight = 13;
+      const frontWindowWidth = Math.min(16, width / (frontColumns * 2.25));
+      const sideWindowWidth = Math.min(16, depth / (sideColumns * 2.25));
+      const firstFloorY = Math.min(height - 12, 24);
+
+      const putWindow = (windowX, windowY, windowZ, scaleX, scaleZ) => {
+        dummy.position.set(windowX, windowY, windowZ);
+        dummy.scale.set(scaleX, windowHeight, scaleZ);
+        dummy.updateMatrix();
+        facadeWindows.setMatrixAt(windowIndex, dummy.matrix);
+        windowIndex += 1;
+      };
+
+      for (let floor = 0; floor < floors; floor += 1) {
+        const y = firstFloorY + floor * ((height - firstFloorY - 10) / floors);
+        for (let column = 0; column < frontColumns; column += 1) {
+          const windowX = x + (column + 0.5) * width / frontColumns;
+          putWindow(windowX, y, z + depth + 0.75, frontWindowWidth, 1.25);
+          putWindow(windowX, y, z - 0.75, frontWindowWidth, 1.25);
+        }
+        for (let column = 0; column < sideColumns; column += 1) {
+          const windowZ = z + (column + 0.5) * depth / sideColumns;
+          putWindow(x + width + 0.75, y, windowZ, 1.25, sideWindowWidth);
+          putWindow(x - 0.75, y, windowZ, 1.25, sideWindowWidth);
+        }
+      }
+    });
+
+    buildings.instanceMatrix.needsUpdate = true;
+    if (buildings.instanceColor) buildings.instanceColor.needsUpdate = true;
+    roofTrims.count = walls.length;
+    roofTrims.instanceMatrix.needsUpdate = true;
+    rooftopUnits.count = roofIndex;
+    rooftopUnits.instanceMatrix.needsUpdate = true;
+    facadeWindows.count = windowIndex;
+    facadeWindows.instanceMatrix.needsUpdate = true;
+
+    // Avoid the unsupported r128 InstancedMesh bounding-sphere update and
+    // keep every instance visible on this large world.
+    buildings.frustumCulled = false;
+    roofTrims.frustumCulled = false;
+    rooftopUnits.frustumCulled = false;
+    facadeWindows.frustumCulled = false;
+    group.add(buildings, roofTrims, rooftopUnits, facadeWindows);
+  }
   createMaterials(map) {
     const THREE = this.THREE;
     const texture = this.surface;
