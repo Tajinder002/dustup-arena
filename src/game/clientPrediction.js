@@ -154,21 +154,41 @@ export class ClientPrediction {
 
     for (let index = state.localBullets.length - 1; index >= 0; index -= 1) {
       const bullet = state.localBullets[index];
-      bullet.x += bullet.vx * deltaSeconds;
-      bullet.y += bullet.vy * deltaSeconds;
-      bullet.z += bullet.vz * deltaSeconds;
+      const startX = bullet.x;
+      const startY = bullet.y;
+      const startZ = bullet.z;
+      const deltaX = bullet.vx * deltaSeconds;
+      const deltaY = bullet.vy * deltaSeconds;
+      const deltaZ = bullet.vz * deltaSeconds;
+      const steps = Math.max(1, Math.ceil(Math.hypot(deltaX, deltaY, deltaZ) / 7));
       bullet.lifetime -= deltaSeconds;
-      const wallIndex = this.collisionManager.wallAt(bullet.x, bullet.y, 3);
-      if (
-        bullet.lifetime <= 0
-        || bullet.z < 0
-        || bullet.x < 0
-        || bullet.y < 0
-        || bullet.x > state.worldWidth
-        || bullet.y > state.worldHeight
-        || (wallIndex >= 0 && bullet.z < state.wallHeights[wallIndex])
-      ) {
+      let remove = bullet.lifetime <= 0;
+
+      for (let step = 1; step <= steps && !remove; step += 1) {
+        const progress = step / steps;
+        const x = startX + deltaX * progress;
+        const y = startY + deltaY * progress;
+        const z = startZ + deltaZ * progress;
+        if (
+          z < 0
+          || x < 0
+          || y < 0
+          || x > state.worldWidth
+          || y > state.worldHeight
+        ) {
+          remove = true;
+          break;
+        }
+        const wallIndex = this.collisionManager.wallAt(x, y, 3);
+        if (wallIndex >= 0 && z < state.wallHeights[wallIndex]) remove = true;
+      }
+
+      if (remove) {
         state.localBullets.splice(index, 1);
+      } else {
+        bullet.x = startX + deltaX;
+        bullet.y = startY + deltaY;
+        bullet.z = startZ + deltaZ;
       }
     }
 
