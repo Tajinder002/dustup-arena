@@ -1,4 +1,4 @@
-import { MAGAZINE_SIZE, RELOAD_SECONDS, BULLET_SPEED } from "../config/gameConfig.js";
+import { MAGAZINE_SIZE, RELOAD_SECONDS, BULLET_SPEED } from "../config/gameConfig.js?v=city-combat-v2";
 
 export class PlayerCombat {
   constructor(state) {
