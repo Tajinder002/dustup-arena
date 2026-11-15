@@ -27,7 +27,7 @@ export class PlayerCombat {
       }
 
       this.state.shotsFired += 1;
-      const aimRay = getThirdPersonAimRay(player, player.angle, player.pitch);
+      const aimRay = getThirdPersonAimRay(player, player.angle, player.pitch, player.cameraDistance);
       this.state.bullets.push({
         x: aimRay.origin.x,
         y: aimRay.origin.y,
