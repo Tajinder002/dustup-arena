@@ -1,7 +1,5 @@
 import { MAPS } from "./mapData.js";
-import { WORLD_WIDTH, WORLD_HEIGHT, MAP_SCALE } from "../config/gameConfig.js";
-import { createProceduralTextureSet } from "../assets/proceduralTextures.js";
-import { ASSET_MANIFEST } from "../assets/assetManifest.js";
+import { WORLD_WIDTH, WORLD_HEIGHT } from "../config/gameConfig.js";
 
 /** Builds the city locally from PBR geometry so every peer sees the same map. */
 export class MapRenderer {
@@ -21,47 +19,78 @@ export class MapRenderer {
     if (!scene || !map) return;
 
     this.disposeCurrentMap();
-    this.surface = createProceduralTextureSet(THREE, {
-      seed: this.state.mapIndex * 73 + 19,
-      concrete: map.concrete,
-      facade: map.facade
-    });
-    this.shared = this.createMaterials(map);
+    this.surface = null;
+    this.shared = null;
+
     this.state.mapGroup = new THREE.Group();
-    this.state.mapGroup.name = `${map.style}-city`;
+    this.state.mapGroup.name = `${map.style}-minimal-city`;
     scene.add(this.state.mapGroup);
 
     scene.background = new THREE.Color(map.sky);
-    scene.fog = new THREE.FogExp2(map.sky, map.style === "tokyo" ? 0.00062 : 0.00034);
-    this.state.ambientLight.intensity = map.amb;
+    scene.fog = null;
+    if (this.state.ambientLight) this.state.ambientLight.intensity = 1;
     if (this.state.sunLight) {
-      this.state.sunLight.color.setHex(map.style === "tokyo" ? 0x9eb8ff : map.style === "dubai" ? 0xffe0b0 : 0xffffff);
-      this.state.sunLight.intensity = map.style === "tokyo" ? 1.0 : 1.65;
-      this.state.sunLight.position.set(map.style === "tokyo" ? -260 : 360, 720, 280);
+      this.state.sunLight.castShadow = false;
+      this.state.sunLight.intensity = 0.8;
     }
 
-    this.buildGroundAndRoads(map);
-    map.walls.forEach(([x, z, width, depth], index) => {
-      this.buildDetailedBuilding(map, x, z, width, depth, map.heightAt(index), index);
-    });
-    this.buildParks(map);
-    this.buildStreetFurniture(map);
-    this.buildTrafficAndVehicles(map);
-    this.buildBoundary(map);
-    if (map.extra) {
-      const extraGroup = new THREE.Group();
-      extraGroup.scale.set(MAP_SCALE, 1.6, MAP_SCALE);
-      this.state.mapGroup.add(extraGroup);
-      const addLocalBox = (centerX, baseY, centerZ, width, height, depth, color) => {
-        const material = new THREE.MeshStandardMaterial({ color, roughness: 0.78 });
-        const mesh = new THREE.Mesh(new THREE.BoxGeometry(width, height, depth), material);
-        mesh.position.set(centerX, baseY + height / 2, centerZ);
-        mesh.castShadow = true;
-        mesh.receiveShadow = true;
-        extraGroup.add(mesh);
-        return mesh;
-      };
-      map.extra(THREE, addLocalBox, extraGroup);
+    this.buildMinimalMap(map);
+  }
+
+  buildMinimalMap(map) {
+    const THREE = this.THREE;
+    const group = this.state.mapGroup;
+    const groundMaterial = new THREE.MeshBasicMaterial({ color: map.ground || 0x64696e });
+    const roadMaterial = new THREE.MeshBasicMaterial({ color: 0x292d33 });
+    const buildingMaterial = new THREE.MeshLambertMaterial({ color: 0xffffff });
+
+    const addFlatPlane = (x, y, z, width, depth, material) => {
+      const plane = new THREE.Mesh(new THREE.PlaneGeometry(width, depth), material);
+      plane.rotation.x = -Math.PI / 2;
+      plane.position.set(x, y, z);
+      plane.castShadow = false;
+      plane.receiveShadow = false;
+      group.add(plane);
+      return plane;
+    };
+
+    // Plain ground and unmarked roads only: no kerbs, lane paint, crossings,
+    // sidewalks, signs, parks, trees, vehicles or decorative props.
+    addFlatPlane(
+      WORLD_WIDTH / 2,
+      -1.15,
+      WORLD_HEIGHT / 2,
+      WORLD_WIDTH + 600,
+      WORLD_HEIGHT + 600,
+      groundMaterial
+    );
+
+    const verticalRoads = [0.26, 0.5, 0.74].map(value => WORLD_WIDTH * value);
+    const horizontalRoads = [0.345, 0.66].map(value => WORLD_HEIGHT * value);
+    verticalRoads.forEach(x => addFlatPlane(x, -0.35, WORLD_HEIGHT / 2, 154, WORLD_HEIGHT, roadMaterial));
+    horizontalRoads.forEach(z => addFlatPlane(WORLD_WIDTH / 2, -0.32, z, WORLD_WIDTH, 148, roadMaterial));
+
+    // Retain every gameplay collision building as one flat instanced box.
+    const walls = map.walls || [];
+    if (walls.length) {
+      const geometry = new THREE.BoxGeometry(1, 1, 1);
+      const buildings = new THREE.InstancedMesh(geometry, buildingMaterial, walls.length);
+      const dummy = new THREE.Object3D();
+      walls.forEach(([x, z, width, depth], index) => {
+        const height = Math.max(8, map.heightAt(index));
+        dummy.position.set(x + width / 2, height / 2, z + depth / 2);
+        dummy.scale.set(width, height, depth);
+        dummy.updateMatrix();
+        buildings.setMatrixAt(index, dummy.matrix);
+        const tint = map.tint?.[index % (map.tint?.length || 1)] ?? 0x7b838b;
+        buildings.setColorAt(index, new THREE.Color(tint));
+      });
+      buildings.instanceMatrix.needsUpdate = true;
+      if (buildings.instanceColor) buildings.instanceColor.needsUpdate = true;
+      buildings.computeBoundingSphere();
+      buildings.castShadow = false;
+      buildings.receiveShadow = false;
+      group.add(buildings);
     }
   }
 
