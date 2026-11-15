@@ -16,16 +16,22 @@ export function createPlayerModel(THREE, colorIndex = 0) {
   group.name = "DustupStevePlayer";
 
   const material = color => new THREE.MeshLambertMaterial({ color });
-  const skin = material(0xc58b62);
-  const hair = material(0x49301f);
-  const shirt = material(0x2865b8);
-  const shirtShadow = material(0x1d4f91);
-  const pants = material(0x263d83);
-  const pantsShadow = material(0x1b2d66);
-  const boots = material(0x29251f);
-  const eyeWhite = material(0xf3eee0);
-  const eyeBlue = material(0x315eae);
-  const darkBrown = material(0x38271f);
+  const skin = material(0xb97855);
+  const hair = material(0x211b1a);
+  const hairHighlight = material(0x332925);
+  const shirt = material(0x1b2b3a);
+  const shirtShadow = material(0x111c28);
+  const armor = material(0x293846);
+  const armorEdge = material(0x526575);
+  const strap = material(0x101820);
+  const brass = material(0xa98a58);
+  const pants = material(0x172331);
+  const pantsShadow = material(0x0d1722);
+  const boots = material(0x171b21);
+  const gloves = material(0x202a34);
+  const eyeWhite = material(0xdce8e8);
+  const eyeBlue = material(0x55b7c8);
+  const darkBrown = material(0x241a18);
   const teamPatch = material(PLAYER_COLORS[colorIndex % PLAYER_COLORS.length]);
 
   // Torso and belt: classic blue shirt with small pixel-like pocket details.
@@ -35,6 +41,16 @@ export function createPlayerModel(THREE, colorIndex = 0) {
   addBlock(THREE, group, shirtShadow, 0.8, 3.1, 0.6, 2.2, 29.6, 3.55);
   addBlock(THREE, group, teamPatch, 2.2, 2.2, 0.45, -3.8, 28.5, 3.24);
 
+  // Low-profile tactical vest, shoulder plates and chest harness.
+  addBlock(THREE, group, armor, 7.4, 9.2, 0.9, 0, 29, 3.42);
+  addBlock(THREE, group, armorEdge, 5.2, 1.1, 0.45, 0, 33.2, 3.95);
+  addBlock(THREE, group, strap, 2, 12.5, 0.75, -3.4, 27.2, 3.8);
+  addBlock(THREE, group, brass, 2.1, 2.1, 0.55, -3.4, 25.5, 4.24);
+  addBlock(THREE, group, shirtShadow, 12.3, 2.2, 6.25, 0, 18.3, 0);
+  addBlock(THREE, group, brass, 2.2, 2.2, 0.55, 0, 18.3, 3.35);
+  addBlock(THREE, group, armor, 3.1, 4, 1.2, -7.2, 22, 1.4);
+  addBlock(THREE, group, armorEdge, 3.2, 1, 1.25, -7.2, 24.1, 1.4);
+
   // Square head with brown hair cap, side hair, eyebrows, eyes, nose and mouth.
   const head = new THREE.Group();
   head.name = "SteveHead";
@@ -42,6 +58,7 @@ export function createPlayerModel(THREE, colorIndex = 0) {
   group.add(head);
   addBlock(THREE, head, skin, 12, 12, 12, 0, 6, 0);
   addBlock(THREE, head, hair, 12.25, 2.1, 12.25, 0, 11, 0);
+  addBlock(THREE, head, hairHighlight, 7.5, 0.55, 2.2, 0, 11.95, 1.3);
   addBlock(THREE, head, hair, 12.25, 10, 1.5, 0, 5.2, -5.25);
   addBlock(THREE, head, hair, 1.5, 8, 10, -5.25, 7, -1.1);
   addBlock(THREE, head, hair, 1.5, 8, 10, 5.25, 7, -1.1);
@@ -66,6 +83,8 @@ export function createPlayerModel(THREE, colorIndex = 0) {
     addBlock(THREE, leg, pants, 6, 18, 6, 0, -9, 0);
     addBlock(THREE, leg, pantsShadow, 6.1, 2.2, 6.1, 0, -16.5, 0);
     addBlock(THREE, leg, boots, 6.2, 3.2, 6.5, 0, -18, 0.2);
+    addBlock(THREE, leg, armor, 6.2, 3.8, 0.85, 0, -8.8, 3.35);
+    addBlock(THREE, leg, armorEdge, 4.2, 0.65, 0.35, 0, -10.2, 3.85);
     legs.push(leg);
   }
 
@@ -80,16 +99,19 @@ export function createPlayerModel(THREE, colorIndex = 0) {
     arm.rotation.z = side < 0 ? 0.62 : 0;
     group.add(arm);
     addBlock(THREE, arm, shirt, 6, 8, 6, 0, -4, 0);
+    addBlock(THREE, arm, armor, 6.25, 3.2, 6.25, 0, -3, 0);
+    addBlock(THREE, arm, armorEdge, 6.3, 0.7, 6.3, 0, -5, 0);
     addBlock(THREE, arm, skin, 6, 10, 6, 0, -13, 0);
+    addBlock(THREE, arm, gloves, 6.15, 2, 6.15, 0, -16.5, 0);
 
     if (side < 0) {
-      addBlock(THREE, arm, skin, 6, 4, 6, 0, -20, 0);
+      addBlock(THREE, arm, gloves, 6, 4, 6, 0, -20, 0);
     } else {
       rightHand = new THREE.Group();
       rightHand.name = "SteveRightHand";
       rightHand.position.set(0, -20, 0);
       arm.add(rightHand);
-      addBlock(THREE, rightHand, skin, 6, 4, 6, 0, 0, 0);
+      addBlock(THREE, rightHand, gloves, 6, 4, 6, 0, 0, 0);
     }
     arms.push(arm);
   }
@@ -112,7 +134,7 @@ export function createPlayerModel(THREE, colorIndex = 0) {
     arms,
     armBaseX: [-0.96, -0.96],
     weapon,
-    materials: [skin, hair, shirt, shirtShadow, pants, pantsShadow, boots, eyeWhite, eyeBlue, darkBrown, teamPatch],
+    materials: [skin, hair, hairHighlight, shirt, shirtShadow, armor, armorEdge, strap, brass, pants, pantsShadow, boots, gloves, eyeWhite, eyeBlue, darkBrown, teamPatch],
     phase: 0,
     movementAmount: 0,
     motionSpeed: 0,
