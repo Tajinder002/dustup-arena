@@ -1,5 +1,5 @@
-import { PLAYER_COLORS } from "../config/gameConfig.js";
-import { createWeaponModel } from "./weaponModel.js?v=city-combat-v2";
+import { PLAYER_COLORS } from "../config/gameConfig.js?v=pubg-aim-v1";
+import { createWeaponModel } from "./weaponModel.js?v=pubg-aim-v1";
 
 function addBlock(THREE, parent, material, width, height, depth, x, y, z) {
   const mesh = new THREE.Mesh(new THREE.BoxGeometry(width, height, depth), material);
