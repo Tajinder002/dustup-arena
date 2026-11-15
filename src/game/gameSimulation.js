@@ -1,7 +1,7 @@
 import { RELOAD_SECONDS, MAGAZINE_SIZE } from "../config/gameConfig.js?v=city-combat-v2";
-import { PlayerMovement } from "../players/playerMovement.js";
+import { PlayerMovement } from "../players/playerMovement.js?v=city-combat-v2";
 import { PlayerCombat } from "../players/playerCombat.js?v=city-combat-v2";
-import { PlayerManager } from "../players/playerManager.js";
+import { PlayerManager } from "../players/playerManager.js?v=city-combat-v2";
 import { BulletManager } from "./bulletManager.js?v=city-combat-v2";
 
 export class GameSimulation {
