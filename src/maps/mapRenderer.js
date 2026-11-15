@@ -29,10 +29,10 @@ export class MapRenderer {
 
     scene.background = new THREE.Color(map.sky);
     scene.fog = null;
-    if (this.state.ambientLight) this.state.ambientLight.intensity = map.amb ?? 0.56;
+    if (this.state.ambientLight) this.state.ambientLight.intensity = map.amb ?? 0.82;
     if (this.state.sunLight) {
       this.state.sunLight.castShadow = false;
-      this.state.sunLight.intensity = 0.52;
+      this.state.sunLight.intensity = 0.86;
     }
 
     this.buildMinimalMap(map);
@@ -42,16 +42,14 @@ export class MapRenderer {
     const THREE = this.THREE;
     const group = this.state.mapGroup;
     const walls = map.walls || [];
-    const groundMaterial = new THREE.MeshBasicMaterial({ color: map.ground || 0x252a31 });
-    const roadMaterial = new THREE.MeshBasicMaterial({ color: 0x151c25 });
+    const groundMaterial = new THREE.MeshBasicMaterial({ color: map.ground || 0x777b80 });
+    const roadMaterial = new THREE.MeshBasicMaterial({ color: 0x363d46 });
     const buildingMaterial = new THREE.MeshLambertMaterial({ color: 0xffffff });
     const windowMaterial = new THREE.MeshLambertMaterial({
-      color: map.style === "tokyo" ? 0x9b5a8d : 0x657e8c,
-      emissive: map.style === "tokyo" ? 0xd83291 : 0xd69d54,
-      emissiveIntensity: map.style === "tokyo" ? 1.15 : 0.42
+      color: map.style === "tokyo" ? 0x6389aa : 0x7899ad
     });
-    const roofMaterial = new THREE.MeshLambertMaterial({ color: 0x171f29 });
-    const rooftopMaterial = new THREE.MeshLambertMaterial({ color: map.accent || 0x75624c });
+    const roofMaterial = new THREE.MeshLambertMaterial({ color: 0x46515c });
+    const rooftopMaterial = new THREE.MeshLambertMaterial({ color: map.accent || 0x9b8060 });
 
     const addFlatPlane = (x, y, z, width, depth, material) => {
       const plane = new THREE.Mesh(new THREE.PlaneGeometry(width, depth), material);
