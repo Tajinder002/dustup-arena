@@ -1,5 +1,4 @@
-import { createPlayerModel, createLoadedPlayerModel } from "../players/playerModel.js?v=simple-world-v4";
-import { ASSET_MANIFEST } from "../assets/assetManifest.js?v=simple-world-v2";
+import { createPlayerModel } from "../players/playerModel.js?v=steve-character-v1";
 
 function wrapAngle(angle) {
   return Math.atan2(Math.sin(angle), Math.cos(angle));
@@ -23,54 +22,18 @@ export class PlayerRenderer {
   }
 
   async initialize() {
-    if (!this.assetLoader?.available) {
-      this.logger("GLTFLoader unavailable. Using the generated human character model.");
-      return false;
-    }
-    if (this.characterLoad) return this.characterLoad;
-
-    this.characterLoad = this.assetLoader.loadFirstAvailable(
-      [ASSET_MANIFEST.character.local, ASSET_MANIFEST.character.remote],
-      ASSET_MANIFEST.character.label
-    ).then(gltf => {
-      this.characterTemplate = gltf.scene;
-      this.characterAnimations = gltf.animations || [];
-      this.characterReady = true;
-      const clipNames = this.characterAnimations.map(clip => clip.name || "unnamed").join(", ");
-      this.logger(`Rigged character ready (${this.characterAnimations.length} animation clips: ${clipNames || "none"}).`);
-      return true;
-    }).catch(error => {
-      this.logger(`Rigged character unavailable; using generated human fallback: ${error.message}`);
-      return false;
-    });
-    return this.characterLoad;
+    // Steve is generated locally from simple cuboids; don't fetch the old
+    // 14 MB cyborg model or wait for its animations before entering a match.
+    this.characterReady = false;
+    this.characterTemplate = null;
+    this.characterAnimations = [];
+    this.logger("Classic Steve player model ready.");
+    return true;
   }
 
   createModel(colorIndex) {
-    if (this.characterReady && this.characterTemplate) {
-      return createLoadedPlayerModel(
-        this.THREE,
-        this.assetLoader,
-        this.characterTemplate,
-        this.characterAnimations,
-        colorIndex
-      );
-    }
-    const fallback = createPlayerModel(this.THREE, colorIndex);
-    fallback.userData.colorIndex = colorIndex;
-    return fallback;
-  }
-
-  replaceWithRiggedModel(playerId, colorIndex) {
-    const state = this.state;
-    const previous = state.playerMeshes[playerId];
-    const model = this.createModel(colorIndex);
-    model.position.copy(previous.position);
-    model.rotation.copy(previous.rotation);
-    model.visible = previous.visible;
-    state.scene.remove(previous);
-    state.scene.add(model);
-    state.playerMeshes[playerId] = model;
+    const model = createPlayerModel(this.THREE, colorIndex);
+    model.userData.colorIndex = colorIndex;
     return model;
   }
 
@@ -219,8 +182,6 @@ export class PlayerRenderer {
         model = this.createModel(colorIndex);
         state.playerMeshes[playerId] = model;
         state.scene.add(model);
-      } else if (this.characterReady && model.userData.isFallback) {
-        model = this.replaceWithRiggedModel(playerId, colorIndex);
       }
 
       if (state.previousHealth[playerId] !== undefined && health < state.previousHealth[playerId]) {
