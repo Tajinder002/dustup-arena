@@ -1,4 +1,4 @@
-import { createPlayerModel, createLoadedPlayerModel } from "../players/playerModel.js?v=simple-world-v2";
+import { createPlayerModel, createLoadedPlayerModel } from "../players/playerModel.js?v=simple-world-v4";
 import { ASSET_MANIFEST } from "../assets/assetManifest.js?v=simple-world-v2";
 
 function wrapAngle(angle) {
