@@ -1,6 +1,5 @@
 import {
   AIM_TARGET_DISTANCE,
-  BULLET_SPEED,
   CAMERA_AIM_HEIGHT,
   CAMERA_DISTANCE,
   CAMERA_SHOULDER_OFFSET,
@@ -14,7 +13,7 @@ import {
  *
  * Coordinates: x/y are the ground plane; z is vertical height.
  */
-export function getThirdPersonAimRay(player, angle, pitch = 0) {
+export function getThirdPersonAimRay(player, angle, pitch = 0, cameraDistanceOverride = null) {
   const safeAngle = Number.isFinite(angle) ? angle : 0;
   const safePitch = Math.max(-1.2, Math.min(1.2, Number.isFinite(pitch) ? pitch : 0));
   const cosinePitch = Math.cos(safePitch);
@@ -24,11 +23,14 @@ export function getThirdPersonAimRay(player, angle, pitch = 0) {
   const rightX = -Math.sin(safeAngle);
   const rightY = Math.cos(safeAngle);
   const playerHeight = Number.isFinite(player.z) ? player.z : 0;
+  const cameraDistance = Number.isFinite(cameraDistanceOverride)
+    ? Math.max(75, Math.min(CAMERA_DISTANCE, cameraDistanceOverride))
+    : CAMERA_DISTANCE;
 
   // Match CameraController's over-the-right-shoulder camera origin.
   const cameraOrigin = {
-    x: player.x + rightX * CAMERA_SHOULDER_OFFSET - forwardX * CAMERA_DISTANCE,
-    y: player.y + rightY * CAMERA_SHOULDER_OFFSET - forwardY * CAMERA_DISTANCE,
+    x: player.x + rightX * CAMERA_SHOULDER_OFFSET - forwardX * cameraDistance,
+    y: player.y + rightY * CAMERA_SHOULDER_OFFSET - forwardY * cameraDistance,
     z: playerHeight + CAMERA_AIM_HEIGHT - sinePitch * CAMERA_DISTANCE
   };
 
