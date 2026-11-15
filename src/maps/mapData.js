@@ -1,4 +1,63 @@
-import { MAP_SCALE } from "../config/gameConfig.js";
+import {
+  MAP_SCALE, WORLD_WIDTH, WORLD_HEIGHT
+} from "../config/gameConfig.js";
+
+function stableHash(row, column, seed) {
+  let value = (Math.imul(row + 1, 374761393)
+    + Math.imul(column + 1, 668265263)
+    + Math.imul(seed + 1, 1442695041)) >>> 0;
+  value = Math.imul(value ^ (value >>> 13), 1274126177);
+  return (value ^ (value >>> 16)) >>> 0;
+}
+
+/**
+ * Create a deterministic street grid of additional buildings in the expanded
+ * city footprint. The gaps around the main avenues remain open for movement.
+ */
+function createDistrictWalls(baseWalls, mapIndex) {
+  const rawWidth = WORLD_WIDTH / MAP_SCALE;
+  const rawHeight = WORLD_HEIGHT / MAP_SCALE;
+  const columns = 14;
+  const rows = 9;
+  const cellWidth = rawWidth / columns;
+  const cellDepth = rawHeight / rows;
+  const verticalRoads = [0.26, 0.5, 0.74].map(value => WORLD_WIDTH * value / MAP_SCALE);
+  const horizontalRoads = [0.345, 0.66].map(value => WORLD_HEIGHT * value / MAP_SCALE);
+  const verticalClearance = 154 / (2 * MAP_SCALE) + 18;
+  const horizontalClearance = 148 / (2 * MAP_SCALE) + 18;
+  const generated = [];
+
+  for (let row = 0; row < rows; row += 1) {
+    for (let column = 0; column < columns; column += 1) {
+      const hash = stableHash(row, column, mapIndex + 17);
+      if (hash % 13 === 0) continue;
+
+      const width = 76 + (hash % 40);
+      const depth = 72 + ((hash >>> 8) % 42);
+      const x = column * cellWidth + (cellWidth - width) / 2;
+      const z = row * cellDepth + (cellDepth - depth) / 2;
+
+      const blocksMainAvenue = verticalRoads.some(roadX =>
+        x < roadX + verticalClearance && x + width > roadX - verticalClearance
+      ) || horizontalRoads.some(roadZ =>
+        z < roadZ + horizontalClearance && z + depth > roadZ - horizontalClearance
+      );
+      if (blocksMainAvenue) continue;
+
+      const overlapsExisting = baseWalls.some(([baseX, baseZ, baseWidth, baseDepth]) =>
+        x < baseX + baseWidth + 14
+        && x + width + 14 > baseX
+        && z < baseZ + baseDepth + 14
+        && z + depth + 14 > baseZ
+      );
+      if (overlapsExisting) continue;
+
+      generated.push([x, z, width, depth]);
+    }
+  }
+
+  return generated;
+}
 
 const rawMaps = [
   {
@@ -57,14 +116,26 @@ const rawMaps = [
   }
 ];
 
-export const MAPS = rawMaps.map(map => {
-  const walls = map.walls.map(wall => wall.map(value => value * MAP_SCALE));
+export const MAPS = rawMaps.map((map, mapIndex) => {
+  const baseWalls = map.walls;
+  const districtWalls = createDistrictWalls(baseWalls, mapIndex);
+  const allWalls = [...baseWalls, ...districtWalls];
+  const rawHeightAt = index => {
+    if (index < baseWalls.length) return map.heightAt(index);
+    const hash = stableHash(index - baseWalls.length, mapIndex, 29);
+    const styleBonus = mapIndex === 2 ? 24 : mapIndex === 3 ? 12 : 0;
+    return 48 + (hash % 7) * 14 + styleBonus;
+  };
+  const walls = allWalls.map(wall => wall.map(value => value * MAP_SCALE));
+  const heightAt = index => rawHeightAt(index) * 1.6;
   const park = (map.park || []).map(area => area.map(value => value * MAP_SCALE));
+
   return {
     ...map,
     walls,
     park,
-    heightAt: index => map.heightAt(index) * 1.6,
-    wallHeights: walls.map((_, index) => map.heightAt(index) * 1.6)
+    heightAt,
+    wallHeights: walls.map((_, index) => heightAt(index)),
+    buildingCount: walls.length
   };
 });
