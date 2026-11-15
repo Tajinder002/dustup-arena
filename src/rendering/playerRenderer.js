@@ -1,4 +1,4 @@
-import { createPlayerModel } from "../players/playerModel.js?v=city-combat-v2";
+import { createPlayerModel } from "../players/playerModel.js?v=pubg-aim-v1";
 
 function wrapAngle(angle) {
   return Math.atan2(Math.sin(angle), Math.cos(angle));
