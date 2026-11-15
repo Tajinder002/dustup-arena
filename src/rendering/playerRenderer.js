@@ -1,5 +1,5 @@
-import { createPlayerModel, createLoadedPlayerModel } from "../players/playerModel.js?v=cyborg-shoot-overlay-v3";
-import { ASSET_MANIFEST } from "../assets/assetManifest.js?v=cyborg-shoot-overlay-v3";
+import { createPlayerModel, createLoadedPlayerModel } from "../players/playerModel.js?v=simple-world-v1";
+import { ASSET_MANIFEST } from "../assets/assetManifest.js?v=simple-world-v1";
 
 function wrapAngle(angle) {
   return Math.atan2(Math.sin(angle), Math.cos(angle));
