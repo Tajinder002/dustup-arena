@@ -1,5 +1,5 @@
-import { MAPS } from "./mapData.js?v=city-combat-v2";
-import { MapRenderer } from "./mapRenderer.js?v=city-combat-v2";
+import { MAPS } from "./mapData.js?v=pubg-aim-v1";
+import { MapRenderer } from "./mapRenderer.js?v=pubg-aim-v1";
 
 export class MapManager {
   constructor(state, THREE, assetLoader = null, logger = () => {}) {
