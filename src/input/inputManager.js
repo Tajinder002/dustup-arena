@@ -1,4 +1,5 @@
 import { $ } from "../utils/dom.js";
+import { CAMERA_DISTANCE } from "../config/gameConfig.js?v=pubg-aim-v1";
 
 export class InputManager {
   constructor(state, canvas) {
@@ -9,7 +10,7 @@ export class InputManager {
   localInput() {
     const state = this.state;
     if (state.paused) {
-      return { mx: 0, my: 0, s: false, a: state.yaw, p: state.pitch, j: false, r: false };
+      return { mx: 0, my: 0, s: false, a: state.yaw, p: state.pitch, j: false, r: false, cd: state.cameraDistance || CAMERA_DISTANCE };
     }
 
     const forward = (
@@ -32,7 +33,8 @@ export class InputManager {
       a: state.yaw,
       p: state.pitch,
       j: !!state.keys[" "] || state.touchInput.jump,
-      r: !!state.keys.r || state.touchInput.reload
+      r: !!state.keys.r || state.touchInput.reload,
+      cd: Number.isFinite(state.cameraDistance) ? state.cameraDistance : CAMERA_DISTANCE
     };
   }
 
