@@ -1,22 +1,22 @@
-import { createGameState } from "./state/gameState.js";
+import { createGameState } from "./state/gameState.js?v=pubg-aim-v1";
 import { AssetLoader } from "./assets/assetLoader.js";
 import { SoundManager } from "./audio/soundManager.js";
 import { CollisionManager } from "./game/collisionManager.js";
-import { GameSimulation } from "./game/gameSimulation.js?v=city-combat-v2";
-import { ClientPrediction } from "./game/clientPrediction.js?v=city-combat-v2";
+import { GameSimulation } from "./game/gameSimulation.js?v=pubg-aim-v1";
+import { ClientPrediction } from "./game/clientPrediction.js?v=pubg-aim-v1";
 import { InputManager } from "./input/inputManager.js";
-import { MapManager } from "./maps/mapManager.js?v=city-combat-v2";
-import { PeerManager } from "./networking/peerManager.js?v=city-combat-v2";
-import { SceneManager } from "./rendering/scene.js?v=city-combat-v2";
-import { PlayerRenderer } from "./rendering/playerRenderer.js?v=city-combat-v2";
-import { CameraController } from "./rendering/camera.js?v=city-combat-v2";
-import { HudRenderer } from "./rendering/hudRenderer.js";
+import { MapManager } from "./maps/mapManager.js?v=pubg-aim-v1";
+import { PeerManager } from "./networking/peerManager.js?v=pubg-aim-v1";
+import { SceneManager } from "./rendering/scene.js?v=pubg-aim-v1";
+import { PlayerRenderer } from "./rendering/playerRenderer.js?v=pubg-aim-v1";
+import { CameraController } from "./rendering/camera.js?v=pubg-aim-v1";
+import { HudRenderer } from "./rendering/hudRenderer.js?v=pubg-aim-v1";
 import { GameRenderer } from "./rendering/renderer.js";
-import { MenuManager } from "./ui/menu.js";
+import { MenuManager } from "./ui/menu.js?v=pubg-aim-v1";
 import { PauseMenu } from "./ui/pauseMenu.js";
 import { DebugLogger } from "./utils/debugLogger.js";
 import { $, setMessage } from "./utils/dom.js";
-import { MAPS } from "./maps/mapData.js?v=city-combat-v2";
+import { MAPS } from "./maps/mapData.js?v=pubg-aim-v1";
 
 class DustupArenaGame {
   constructor(THREE, Peer) {
