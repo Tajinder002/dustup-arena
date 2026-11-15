@@ -1,5 +1,5 @@
 import { PLAYER_COLORS } from "../config/gameConfig.js";
-import { createWeaponModel } from "./weaponModel.js?v=simple-world-v1";
+import { createWeaponModel } from "./weaponModel.js?v=simple-world-v2";
 
 function sphere(THREE, group, material, position, scale, detail = 14) {
   const mesh = new THREE.Mesh(new THREE.SphereGeometry(1, detail, Math.max(8, detail - 2)), material);
@@ -146,7 +146,14 @@ export function createLoadedPlayerModel(THREE, assetLoader, template, animations
     object.castShadow = false;
     object.receiveShadow = false;
     const oldMaterials = Array.isArray(object.material) ? object.material : [object.material];
-    oldMaterials.forEach(material => material?.dispose?.());
+    oldMaterials.forEach(material => {
+      if (!material) return;
+      [
+        "map", "normalMap", "roughnessMap", "metalnessMap", "aoMap",
+        "emissiveMap", "alphaMap", "bumpMap", "displacementMap"
+      ].forEach(key => material[key]?.dispose?.());
+      material.dispose?.();
+    });
     object.material = flatCharacterMaterial;
   });
 
