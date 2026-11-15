@@ -1,5 +1,5 @@
 import { PLAYER_COLORS } from "../config/gameConfig.js";
-import { createWeaponModel } from "./weaponModel.js";
+import { createWeaponModel } from "./weaponModel.js?v=simple-world-v1";
 
 function sphere(THREE, group, material, position, scale, detail = 14) {
   const mesh = new THREE.Mesh(new THREE.SphereGeometry(1, detail, Math.max(8, detail - 2)), material);
@@ -136,29 +136,18 @@ export function createLoadedPlayerModel(THREE, assetLoader, template, animations
   const wrapper = new THREE.Group();
   wrapper.name = "DustupRiggedPlayer";
   const avatar = assetLoader.cloneScene(template);
+  const flatCharacterMaterial = new THREE.MeshLambertMaterial({
+    color: 0x929ba3,
+    flatShading: true,
+    side: THREE.DoubleSide
+  });
   avatar.traverse(object => {
     if (!object.isMesh) return;
-    // Skinned player meshes can be expensive to include in the city shadow map.
-    // Keep the character visually lit but exclude it from shadow-map passes.
     object.castShadow = false;
     object.receiveShadow = false;
-    if (Array.isArray(object.material)) object.material = object.material.map(material => material.clone());
-    else if (object.material) object.material = object.material.clone();
-  });
-
-  // The cyborg mesh accessor bounds describe the unskinned bind geometry,
-  // which is only about 1.8 cm tall because its Armature node carries a 0.01
-  // scale. Measuring that box makes the avatar ~100x too large once skinning
-  // applies the full bone transforms. Measure the actual world-space rig joints.
-  avatar.updateMatrixWorld(true);
-  const rigBounds = new THREE.Box3();
-  const bonePosition = new THREE.Vector3();
-  let boneCount = 0;
-  avatar.traverse(object => {
-    if (!object.isBone) return;
-    object.getWorldPosition(bonePosition);
-    rigBounds.expandByPoint(bonePosition);
-    boneCount += 1;
+    const oldMaterials = Array.isArray(object.material) ? object.material : [object.material];
+    oldMaterials.forEach(material => material?.dispose?.());
+    object.material = flatCharacterMaterial;
   });
 
   const bounds = new THREE.Box3().setFromObject(avatar);
@@ -239,20 +228,8 @@ export function createLoadedPlayerModel(THREE, assetLoader, template, animations
   // This cyborg asset contains walk and run clips only. Do not play a
   // locomotion clip as an idle animation; leave the rig in its neutral pose.
 
-  const teamColor = new THREE.Color(PLAYER_COLORS[colorIndex % PLAYER_COLORS.length]);
-  avatar.traverse(object => {
-    if (!object.isMesh) return;
-    const materials = Array.isArray(object.material) ? object.material : [object.material];
-    materials.forEach(material => {
-      if (!material?.color) return;
-      const materialName = material.name?.toLowerCase() || "";
-      if (/cloth|shirt|jacket|pants|fabric|body/i.test(materialName)) {
-        material.color.lerp(teamColor, 0.42);
-      } else if (!/skin|face|hair|eye/i.test(materialName)) {
-        material.color.lerp(teamColor, 0.12);
-      }
-    });
-  });
+  // The character uses one intentionally flat neutral material; team colours
+  // are shown by the HUD rather than detailed surface textures.
 
   wrapper.userData = {
     isFallback: false,
