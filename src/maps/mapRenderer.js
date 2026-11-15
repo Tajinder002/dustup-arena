@@ -88,7 +88,9 @@ export class MapRenderer {
       });
       buildings.instanceMatrix.needsUpdate = true;
       if (buildings.instanceColor) buildings.instanceColor.needsUpdate = true;
-      buildings.computeBoundingSphere();
+      // Three.js r128 InstancedMesh has no computeBoundingSphere() method.
+      // Disable frustum culling so the instanced city blocks always render.
+      buildings.frustumCulled = false;
       buildings.castShadow = false;
       buildings.receiveShadow = false;
       group.add(buildings);
