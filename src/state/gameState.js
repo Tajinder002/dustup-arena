@@ -1,5 +1,5 @@
 import { WORLD_WIDTH, WORLD_HEIGHT, GAME_VERSION, MAGAZINE_SIZE } from "../config/gameConfig.js?v=pubg-aim-v1";
-import { MAPS } from "../maps/mapData.js?v=pubg-aim-v1";
+import { MAPS } from "../maps/mapData.js?v=dark-style-v1";
 
 export function createGameState() {
   return {
