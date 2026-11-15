@@ -1,4 +1,5 @@
-import { PLAYER_SPEED, PLAYER_RADIUS, MAGAZINE_SIZE, BULLET_SPEED } from "../config/gameConfig.js?v=city-combat-v2";
+import { PLAYER_SPEED, PLAYER_RADIUS, MAGAZINE_SIZE, BULLET_SPEED } from "../config/gameConfig.js?v=pubg-aim-v1";
+import { getThirdPersonAimRay } from "./aiming.js?v=pubg-aim-v1";
 
 export class ClientPrediction {
   constructor(state, collisionManager, soundManager, localInput) {
@@ -130,17 +131,18 @@ export class ClientPrediction {
         && (hasCheatGun || (state.localAmmo > 0 && !(localPlayerRow[12] > 0)))
       ) {
         state.localShotCooldown = hasCheatGun ? 0.07 : 0.2;
-        const cosine = Math.cos(input.a);
-        const sine = Math.sin(input.a);
-        const cosinePitch = Math.cos(state.pitch);
-        const sinePitch = Math.sin(state.pitch);
+        const localAimRay = getThirdPersonAimRay(
+          { ...state.localPlayer, z: state.localZ, radius: PLAYER_RADIUS },
+          input.a,
+          input.p ?? state.pitch
+        );
         state.localBullets.push({
-          x: state.localPlayer.x - sine * 10 + cosine * PLAYER_RADIUS,
-          y: state.localPlayer.y + cosine * 10 + sine * PLAYER_RADIUS,
-          z: state.localZ + 36,
-          vx: cosine * cosinePitch * BULLET_SPEED,
-          vy: sine * cosinePitch * BULLET_SPEED,
-          vz: sinePitch * BULLET_SPEED,
+          x: localAimRay.origin.x,
+          y: localAimRay.origin.y,
+          z: localAimRay.origin.z,
+          vx: localAimRay.direction.x * BULLET_SPEED,
+          vy: localAimRay.direction.y * BULLET_SPEED,
+          vz: localAimRay.direction.z * BULLET_SPEED,
           lifetime: 2
         });
         if (!hasCheatGun) state.localAmmo = Math.max(0, state.localAmmo - 1);
