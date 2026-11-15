@@ -1,4 +1,4 @@
-import { PLAYER_SPEED, PLAYER_RADIUS, MAGAZINE_SIZE, BULLET_SPEED } from "../config/gameConfig.js";
+import { PLAYER_SPEED, PLAYER_RADIUS, MAGAZINE_SIZE, BULLET_SPEED } from "../config/gameConfig.js?v=city-combat-v2";
 
 export class ClientPrediction {
   constructor(state, collisionManager, soundManager, localInput) {
