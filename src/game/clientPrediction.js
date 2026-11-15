@@ -134,7 +134,8 @@ export class ClientPrediction {
         const localAimRay = getThirdPersonAimRay(
           { ...state.localPlayer, z: state.localZ, radius: PLAYER_RADIUS },
           input.a,
-          input.p ?? state.pitch
+          input.p ?? state.pitch,
+          state.cameraDistance
         );
         state.localBullets.push({
           x: localAimRay.origin.x,
