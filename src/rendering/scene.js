@@ -20,7 +20,7 @@ export class SceneManager {
       powerPreference: "high-performance"
     });
     state.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, mobile ? 1 : 1.5));
-    state.renderer.shadowMap.enabled = !mobile;
+    state.renderer.shadowMap.enabled = false;
     state.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     state.renderer.outputEncoding = THREE.sRGBEncoding;
     state.renderer.toneMapping = THREE.ACESFilmicToneMapping;
@@ -34,7 +34,7 @@ export class SceneManager {
 
     state.sunLight = new THREE.DirectionalLight(0xfff0da, 1.65);
     state.sunLight.position.set(360, 720, 280);
-    state.sunLight.castShadow = !mobile;
+    state.sunLight.castShadow = false;
     state.sunLight.shadow.mapSize.set(mobile ? 512 : 2048, mobile ? 512 : 2048);
     state.sunLight.shadow.camera.left = -1500;
     state.sunLight.shadow.camera.right = 1500;
