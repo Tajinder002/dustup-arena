@@ -1,4 +1,4 @@
-import { PLAYER_SPEED, PLAYER_RADIUS, MAGAZINE_SIZE } from "../config/gameConfig.js";
+import { PLAYER_SPEED, PLAYER_RADIUS, MAGAZINE_SIZE, BULLET_SPEED } from "../config/gameConfig.js";
 
 export class ClientPrediction {
   constructor(state, collisionManager, soundManager, localInput) {
@@ -138,9 +138,9 @@ export class ClientPrediction {
           x: state.localPlayer.x - sine * 10 + cosine * PLAYER_RADIUS,
           y: state.localPlayer.y + cosine * 10 + sine * PLAYER_RADIUS,
           z: state.localZ + 36,
-          vx: cosine * cosinePitch * 1000,
-          vy: sine * cosinePitch * 1000,
-          vz: sinePitch * 1000,
+          vx: cosine * cosinePitch * BULLET_SPEED,
+          vy: sine * cosinePitch * BULLET_SPEED,
+          vz: sinePitch * BULLET_SPEED,
           lifetime: 2
         });
         if (!hasCheatGun) state.localAmmo = Math.max(0, state.localAmmo - 1);
