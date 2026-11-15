@@ -43,6 +43,7 @@ export class CameraController {
     while (cameraDistance > CAMERA_MIN_DISTANCE && cameraBlocked(cameraDistance)) {
       cameraDistance -= 10;
     }
+    state.cameraDistance = cameraDistance;
 
     state.camera.position.set(
       playerX - forwardX * cameraDistance,
