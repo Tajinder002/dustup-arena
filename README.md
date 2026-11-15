@@ -1,6 +1,6 @@
 # Dustup Arena 3D — Realistic City Upgrade
 
-Dustup Arena is a browser-based third-person city shooter for up to six players. The supplied PeerJS multiplayer simulation, 4-letter room codes, four maps, combat, respawning, controls and scoreboard remain in place. This upgrade replaces the old plain building boxes and pixel player with a detailed procedural city renderer, PBR-style surfaces, road layouts, city props, a human-shaped fallback character and an optional rigged glTF character pipeline.
+Dustup Arena is a browser-based third-person city shooter for up to 16 players. The PeerJS multiplayer simulation supports up to 16 players per host room, with 4-letter room codes, four expanded city maps, combat, respawning, controls and a scoreboard. This upgrade replaces the old plain building boxes and pixel player with a detailed procedural city renderer, PBR-style surfaces, road layouts, city props, a human-shaped fallback character and an optional rigged glTF character pipeline.
 
 ## What changed
 
@@ -15,7 +15,7 @@ Dustup Arena is a browser-based third-person city shooter for up to six players.
 
 ## Important asset notes
 
-The city architecture, cars, street furniture and PBR-style texture maps are generated procedurally in JavaScript. They are detailed game geometry, not photogrammetry scans or imported photorealistic building GLBs. The rigged cyborg character is expected at `assets/models/characters/cyborg-rigged.glb`. Its runtime scale is derived from the skeleton joint bounds rather than the unskinned geometry accessor bounds, and its local +Z forward axis is aligned to the game's +X heading at yaw zero. Add the supplied GLB at that exact path for the rigged player to appear; if it is missing or fails to load, the game uses the procedural human fallback. The sample truck and HDRI remain optional binary assets. The supplied cyborg contains two locomotion clips (`walk` and `run`), but no dedicated idle, shooting or reload clip. Its original redistribution license is not included in the GLB metadata and must be verified before public/commercial redistribution.
+The expanded city footprints, instanced building shells, facade windows, roof trims and rooftop units are generated procedurally in JavaScript. They are detailed game geometry, not photogrammetry scans or imported photorealistic building GLBs. The older cyborg GLB is retained in the repository but is not requested at runtime. Steve is generated from local block geometry, so the game does not need to download a character model.
 
 To download the optional local files (requires internet):
 
@@ -23,7 +23,7 @@ To download the optional local files (requires internet):
 npm run assets:download
 ```
 
-This downloads the Khronos Cesium Man and Cesium Milk Truck glTF samples and a 1K Poly Haven HDRI into `assets/`. Their source credits and licenses are documented in `assets/ASSET_CREDITS.md`. The Cesium Man sample is a rigged, textured demonstration character; it is not a photorealistic motion-capture soldier. Only animations actually present in its file are played. When an expected action clip is absent, the renderer uses a procedural pose/recoil fallback rather than claiming that the model contains that animation. The current game therefore provides a detailed procedural city with a sample rigged character option—not a fully photorealistic scanned-world asset pack.
+This downloads the Khronos Cesium Man and Cesium Milk Truck glTF samples and a 1K Poly Haven HDRI into `assets/`. Their source credits and licenses are documented in `assets/ASSET_CREDITS.md`. The Cesium Man sample is a rigged, textured demonstration character; it is not a photorealistic motion-capture soldier. Only animations actually present in its file are played. When an expected action clip is absent, the renderer uses a procedural pose/recoil fallback rather than claiming that the model contains that animation. The game uses stylized, lightweight procedural city geometry and a block-character art style.
 
 If local assets are missing, the character and HDRI loaders try their public upstream URLs. A network connection is required for those remote assets, the CDN libraries, Google Fonts and PeerJS signalling.
 
