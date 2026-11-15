@@ -1,5 +1,5 @@
 import { MAPS } from "./mapData.js";
-import { MapRenderer } from "./mapRenderer.js";
+import { MapRenderer } from "./mapRenderer.js?v=simple-world-v1";
 
 export class MapManager {
   constructor(state, THREE, assetLoader = null, logger = () => {}) {
