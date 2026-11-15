@@ -1,6 +1,7 @@
-import { createWeaponModel } from "./weaponModel.js?v=steve-character-v1";
+import { PLAYER_COLORS } from "../config/gameConfig.js";
+import { createWeaponModel } from "./weaponModel.js?v=city-combat-v2";
 
-function addSteveBlock(THREE, parent, material, width, height, depth, x, y, z) {
+function addBlock(THREE, parent, material, width, height, depth, x, y, z) {
   const mesh = new THREE.Mesh(new THREE.BoxGeometry(width, height, depth), material);
   mesh.position.set(x, y, z);
   mesh.castShadow = false;
@@ -9,90 +10,109 @@ function addSteveBlock(THREE, parent, material, width, height, depth, x, y, z) {
   return mesh;
 }
 
-/**
- * Classic blocky Steve-style player. All dimensions use the game's 48-unit
- * player scale. Separate arm and leg pivots keep the existing run animation
- * controller working without a downloaded model or external textures.
- */
+/** A detailed classic Steve-style block character with independent limb pivots. */
 export function createPlayerModel(THREE, colorIndex = 0) {
   const group = new THREE.Group();
   group.name = "DustupStevePlayer";
 
-  const material = (color, extra = {}) => new THREE.MeshLambertMaterial({ color, ...extra });
+  const material = color => new THREE.MeshLambertMaterial({ color });
   const skin = material(0xc58b62);
   const hair = material(0x49301f);
   const shirt = material(0x2865b8);
-  const shirtDark = material(0x204f91);
+  const shirtShadow = material(0x1d4f91);
   const pants = material(0x263d83);
+  const pantsShadow = material(0x1b2d66);
   const boots = material(0x29251f);
   const eyeWhite = material(0xf3eee0);
   const eyeBlue = material(0x315eae);
-  const mouth = material(0x70452f);
+  const darkBrown = material(0x38271f);
+  const teamPatch = material(PLAYER_COLORS[colorIndex % PLAYER_COLORS.length]);
 
-  // Torso: bright blue shirt, with a simple collar block.
-  addSteveBlock(THREE, group, shirt, 12, 18, 6, 0, 27, 0);
-  addSteveBlock(THREE, group, shirtDark, 5, 2, 0.35, 0, 34.5, 3.18);
+  // Torso and belt: classic blue shirt with small pixel-like pocket details.
+  addBlock(THREE, group, shirt, 12, 18, 6, 0, 27, 0);
+  addBlock(THREE, group, shirtShadow, 12.1, 2.2, 6.1, 0, 18.5, 0);
+  addBlock(THREE, group, shirtShadow, 4.2, 2.8, 0.55, 3.3, 29.5, 3.2);
+  addBlock(THREE, group, shirtShadow, 0.8, 3.1, 0.6, 2.2, 29.6, 3.55);
+  addBlock(THREE, group, teamPatch, 2.2, 2.2, 0.45, -3.8, 28.5, 3.24);
 
-  // Head: 12-unit cube, with the classic brown hair cap and side/back hair.
+  // Square head with brown hair cap, side hair, eyebrows, eyes, nose and mouth.
   const head = new THREE.Group();
   head.name = "SteveHead";
   head.position.set(0, 36, 0);
   group.add(head);
-  addSteveBlock(THREE, head, skin, 12, 12, 12, 0, 6, 0);
-  addSteveBlock(THREE, head, hair, 12.2, 2, 12.2, 0, 11, 0);
-  addSteveBlock(THREE, head, hair, 12.2, 12, 1.8, 0, 6, -5.1);
-  addSteveBlock(THREE, head, hair, 2, 10, 7, -5.1, 5.5, -2.4);
-  addSteveBlock(THREE, head, hair, 2, 10, 7, 5.1, 5.5, -2.4);
+  addBlock(THREE, head, skin, 12, 12, 12, 0, 6, 0);
+  addBlock(THREE, head, hair, 12.25, 2.1, 12.25, 0, 11, 0);
+  addBlock(THREE, head, hair, 12.25, 10, 1.5, 0, 5.2, -5.25);
+  addBlock(THREE, head, hair, 1.5, 8, 10, -5.25, 7, -1.1);
+  addBlock(THREE, head, hair, 1.5, 8, 10, 5.25, 7, -1.1);
+  addBlock(THREE, head, darkBrown, 3.4, 1.1, 0.45, 0, 8.8, 6.22);
 
-  // Square face details on the +Z/front side.
   for (const side of [-1, 1]) {
-    addSteveBlock(THREE, head, eyeWhite, 2.1, 1.7, 0.45, side * 2.65, 6.9, 6.22);
-    addSteveBlock(THREE, head, eyeBlue, 0.9, 1.25, 0.25, side * 2.45, 6.85, 6.58);
+    addBlock(THREE, head, eyeWhite, 2.2, 1.8, 0.45, side * 2.65, 6.5, 6.22);
+    addBlock(THREE, head, eyeBlue, 1, 1.35, 0.25, side * 2.38, 6.45, 6.58);
   }
-  addSteveBlock(THREE, head, skin, 2.2, 2.6, 1.2, 0, 4.2, 6.35);
-  addSteveBlock(THREE, head, mouth, 5.4, 1.4, 0.4, 0, 1.1, 6.22);
+  addBlock(THREE, head, skin, 2.2, 2.2, 1.5, 0, 4.3, 6.35);
+  addBlock(THREE, head, darkBrown, 2.2, 1.1, 0.5, 0, 2.2, 6.24);
+  addBlock(THREE, head, darkBrown, 1.8, 1.1, 0.5, -2.1, 2.2, 6.24);
+  addBlock(THREE, head, darkBrown, 1.8, 1.1, 0.5, 2.1, 2.2, 6.24);
 
-  // Legs use pivot groups so the existing alternating run cycle remains valid.
+  // Square legs and boots, each pivoted at the hip for walking/running.
   const legs = [];
   for (const side of [-1, 1]) {
     const leg = new THREE.Group();
     leg.name = side < 0 ? "SteveLeftLeg" : "SteveRightLeg";
     leg.position.set(side * 3, 18, 0);
     group.add(leg);
-    addSteveBlock(THREE, leg, pants, 6, 18, 6, 0, -9, 0);
-    addSteveBlock(THREE, leg, boots, 6.1, 3, 6.2, 0, -16.5, 0.25);
+    addBlock(THREE, leg, pants, 6, 18, 6, 0, -9, 0);
+    addBlock(THREE, leg, pantsShadow, 6.1, 2.2, 6.1, 0, -16.5, 0);
+    addBlock(THREE, leg, boots, 6.2, 3.2, 6.5, 0, -18, 0.2);
     legs.push(leg);
   }
 
-  // Arms: blue short sleeves above square skin-coloured forearms.
+  // Sleeves and square forearms are attached to shoulder pivots.
   const arms = [];
+  let rightHand = null;
   for (const side of [-1, 1]) {
     const arm = new THREE.Group();
     arm.name = side < 0 ? "SteveLeftArm" : "SteveRightArm";
     arm.position.set(side * 9, 35, 0);
+    arm.rotation.x = -0.96;
+    arm.rotation.z = side < 0 ? 0.62 : 0;
     group.add(arm);
-    addSteveBlock(THREE, arm, shirt, 6, 8, 6, 0, -4, 0);
-    addSteveBlock(THREE, arm, skin, 6, 10, 6, 0, -13, 0);
+    addBlock(THREE, arm, shirt, 6, 8, 6, 0, -4, 0);
+    addBlock(THREE, arm, skin, 6, 10, 6, 0, -13, 0);
+
+    if (side < 0) {
+      addBlock(THREE, arm, skin, 6, 4, 6, 0, -20, 0);
+    } else {
+      rightHand = new THREE.Group();
+      rightHand.name = "SteveRightHand";
+      rightHand.position.set(0, -20, 0);
+      arm.add(rightHand);
+      addBlock(THREE, rightHand, skin, 6, 4, 6, 0, 0, 0);
+    }
     arms.push(arm);
   }
 
-  // Keep the current rifle and recoil/muzzle-flash hooks, but use a simple
-  // compact scale and place it across the front of Steve's torso.
-  const weapon = createWeaponModel(THREE, 0.42);
-  weapon.position.set(4.8, 27.5, 6.2);
-  weapon.rotation.set(0, 0, 0);
+  // Mount the rifle on Steve's right hand. The local +90 degree rotation
+  // cancels the raised forearm angle so the barrel points forward (+Z).
+  const weapon = createWeaponModel(THREE, 0.55);
+  weapon.position.set(-2.8, -0.5, 5.2);
+  weapon.rotation.set(0.96, 0, 0);
   weapon.userData.baseRotationX = weapon.rotation.x;
-  group.add(weapon);
+  rightHand.add(weapon);
 
   group.userData = {
     isFallback: true,
     isSteve: true,
     colorIndex,
     head,
+    headBaseY: 36,
     legs,
     arms,
+    armBaseX: [-0.96, -0.96],
     weapon,
-    materials: [skin, hair, shirt, shirtDark, pants, boots, eyeWhite, eyeBlue, mouth],
+    materials: [skin, hair, shirt, shirtShadow, pants, pantsShadow, boots, eyeWhite, eyeBlue, darkBrown, teamPatch],
     phase: 0,
     movementAmount: 0,
     motionSpeed: 0,
@@ -114,4 +134,3 @@ export function createPlayerModel(THREE, colorIndex = 0) {
   };
   return group;
 }
-
