@@ -1,4 +1,4 @@
-import { createPlayerModel } from "../players/playerModel.js?v=pubg-aim-v1";
+import { createPlayerModel } from "../players/playerModel.js?v=dark-style-v1";
 
 function wrapAngle(angle) {
   return Math.atan2(Math.sin(angle), Math.cos(angle));
