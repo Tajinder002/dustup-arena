@@ -1,4 +1,5 @@
-import { MAGAZINE_SIZE, RELOAD_SECONDS, BULLET_SPEED } from "../config/gameConfig.js?v=city-combat-v2";
+import { MAGAZINE_SIZE, RELOAD_SECONDS, BULLET_SPEED } from "../config/gameConfig.js?v=pubg-aim-v1";
+import { getThirdPersonAimRay } from "../game/aiming.js?v=pubg-aim-v1";
 
 export class PlayerCombat {
   constructor(state) {
@@ -26,19 +27,14 @@ export class PlayerCombat {
       }
 
       this.state.shotsFired += 1;
-      const cosineAngle = Math.cos(player.angle);
-      const sineAngle = Math.sin(player.angle);
-      const cosinePitch = Math.cos(player.pitch);
-      const sinePitch = Math.sin(player.pitch);
-      const radius = player.radius;
-
+      const aimRay = getThirdPersonAimRay(player, player.angle, player.pitch);
       this.state.bullets.push({
-        x: player.x - sineAngle * 10 + cosineAngle * radius,
-        y: player.y + cosineAngle * 10 + sineAngle * radius,
-        z: player.z + 36,
-        vx: cosineAngle * cosinePitch * BULLET_SPEED,
-        vy: sineAngle * cosinePitch * BULLET_SPEED,
-        vz: sinePitch * BULLET_SPEED,
+        x: aimRay.origin.x,
+        y: aimRay.origin.y,
+        z: aimRay.origin.z,
+        vx: aimRay.direction.x * BULLET_SPEED,
+        vy: aimRay.direction.y * BULLET_SPEED,
+        vz: aimRay.direction.z * BULLET_SPEED,
         ownerId: playerId,
         colorIndex: player.colorIndex,
         lifetime: 2
