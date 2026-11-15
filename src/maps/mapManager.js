@@ -1,5 +1,5 @@
-import { MAPS } from "./mapData.js?v=dark-style-v1";
-import { MapRenderer } from "./mapRenderer.js?v=dark-style-v1";
+import { MAPS } from "./mapData.js?v=color-refresh-v2";
+import { MapRenderer } from "./mapRenderer.js?v=color-refresh-v2";
 
 export class MapManager {
   constructor(state, THREE, assetLoader = null, logger = () => {}) {
