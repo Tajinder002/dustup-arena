@@ -4,7 +4,7 @@ import { SoundManager } from "./audio/soundManager.js";
 import { CollisionManager } from "./game/collisionManager.js";
 import { GameSimulation } from "./game/gameSimulation.js?v=pubg-aim-v1";
 import { ClientPrediction } from "./game/clientPrediction.js?v=pubg-aim-v1";
-import { InputManager } from "./input/inputManager.js";
+import { InputManager } from "./input/inputManager.js?v=pubg-aim-v1";
 import { MapManager } from "./maps/mapManager.js?v=pubg-aim-v1";
 import { PeerManager } from "./networking/peerManager.js?v=pubg-aim-v1";
 import { SceneManager } from "./rendering/scene.js?v=pubg-aim-v1";
