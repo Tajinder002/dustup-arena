@@ -1,6 +1,6 @@
 import {
   MAP_SCALE, WORLD_WIDTH, WORLD_HEIGHT
-} from "../config/gameConfig.js";
+} from "../config/gameConfig.js?v=city-combat-v2";
 
 function stableHash(row, column, seed) {
   let value = (Math.imul(row + 1, 374761393)
