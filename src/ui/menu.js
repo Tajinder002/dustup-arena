@@ -1,4 +1,4 @@
-import { MAPS } from "../maps/mapData.js";
+import { MAPS } from "../maps/mapData.js?v=city-combat-v2";
 import { randomInteger } from "../utils/math.js";
 import { $, setMessage } from "../utils/dom.js";
 
