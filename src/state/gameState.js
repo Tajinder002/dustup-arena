@@ -1,5 +1,5 @@
-import { WORLD_WIDTH, WORLD_HEIGHT, GAME_VERSION, MAGAZINE_SIZE } from "../config/gameConfig.js";
-import { MAPS } from "../maps/mapData.js";
+import { WORLD_WIDTH, WORLD_HEIGHT, GAME_VERSION, MAGAZINE_SIZE } from "../config/gameConfig.js?v=city-combat-v2";
+import { MAPS } from "../maps/mapData.js?v=city-combat-v2";
 
 export function createGameState() {
   return {
