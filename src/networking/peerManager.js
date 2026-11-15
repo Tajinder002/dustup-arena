@@ -1,4 +1,4 @@
-import { ROOM_PREFIX } from "../config/gameConfig.js";
+import { ROOM_PREFIX, MAX_PLAYERS } from "../config/gameConfig.js";
 import { createRoomCode } from "../utils/roomCode.js";
 import { setMessage } from "../utils/dom.js";
 
@@ -84,7 +84,7 @@ export class PeerManager {
           }
 
           if (state.connections[connection.peer]) return;
-          if (Object.keys(state.players).length >= 6) {
+          if (Object.keys(state.players).length >= MAX_PLAYERS) {
             connection.send(JSON.stringify({ full: 1 }));
             window.setTimeout(() => connection.close(), 300);
             return;
@@ -98,7 +98,7 @@ export class PeerManager {
           if (
             !state.players[connection.peer]
             && connection.open
-            && Object.keys(state.players).length < 6
+            && Object.keys(state.players).length < MAX_PLAYERS
           ) {
             state.connections[connection.peer] = connection;
             const player = this.callbacks.addPlayer(connection.peer, `Player${Math.floor(Math.random() * 100)}`);
