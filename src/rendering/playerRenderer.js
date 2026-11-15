@@ -1,5 +1,5 @@
-import { createPlayerModel, createLoadedPlayerModel } from "../players/playerModel.js?v=cyborg-motion-v1";
-import { ASSET_MANIFEST } from "../assets/assetManifest.js?v=cyborg-motion-v1";
+import { createPlayerModel, createLoadedPlayerModel } from "../players/playerModel.js?v=cyborg-motion-v2";
+import { ASSET_MANIFEST } from "../assets/assetManifest.js?v=cyborg-motion-v2";
 
 function wrapAngle(angle) {
   return Math.atan2(Math.sin(angle), Math.cos(angle));
