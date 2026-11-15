@@ -81,3 +81,32 @@ test("combat and room capacity use the new tuning", () => {
   assert.equal(BULLET_SPEED, 2400);
   assert.equal(MAX_PLAYERS, 16);
 });
+
+
+test("PUBG-style shoulder aim ray aligns bullets with the screen-centre reticle", async () => {
+  const { getThirdPersonAimRay } = await import("../src/game/aiming.js");
+  const config = await import("../src/config/gameConfig.js");
+  const player = { x: 1000, y: 1200, z: 0, radius: 16 };
+  const ray = getThirdPersonAimRay(player, 0, 0);
+
+  assert.equal(ray.cameraOrigin.x, player.x - config.CAMERA_DISTANCE);
+  assert.equal(ray.cameraOrigin.y, player.y + config.CAMERA_SHOULDER_OFFSET);
+  assert.equal(ray.cameraOrigin.z, config.CAMERA_AIM_HEIGHT);
+
+  const length = Math.hypot(ray.direction.x, ray.direction.y, ray.direction.z);
+  assert.ok(Math.abs(length - 1) < 1e-9);
+
+  const towardTarget = {
+    x: ray.target.x - ray.origin.x,
+    y: ray.target.y - ray.origin.y,
+    z: ray.target.z - ray.origin.z
+  };
+  const targetLength = Math.hypot(towardTarget.x, towardTarget.y, towardTarget.z);
+  assert.ok(Math.abs(towardTarget.x / targetLength - ray.direction.x) < 1e-9);
+  assert.ok(Math.abs(towardTarget.y / targetLength - ray.direction.y) < 1e-9);
+  assert.ok(Math.abs(towardTarget.z / targetLength - ray.direction.z) < 1e-9);
+
+  const pushedInRay = getThirdPersonAimRay(player, 0.5, 0.1, config.CAMERA_MIN_DISTANCE);
+  assert.ok(pushedInRay.cameraOrigin.x > ray.cameraOrigin.x);
+  assert.ok(pushedInRay.cameraOrigin.y !== ray.cameraOrigin.y);
+});
