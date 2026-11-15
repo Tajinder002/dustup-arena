@@ -1,4 +1,4 @@
-import { PLAYER_SPEED } from "../config/gameConfig.js?v=city-combat-v2";
+import { PLAYER_SPEED, CAMERA_DISTANCE, CAMERA_MIN_DISTANCE } from "../config/gameConfig.js?v=pubg-aim-v1";
 
 export class PlayerMovement {
   constructor(state, collisionManager) {
@@ -10,6 +10,12 @@ export class PlayerMovement {
     let deltaX = input.mx || 0;
     let deltaY = input.my || 0;
     const magnitude = Math.hypot(deltaX, deltaY) || 1;
+
+    if (Number.isFinite(input.cd)) {
+      player.cameraDistance = Math.max(CAMERA_MIN_DISTANCE, Math.min(CAMERA_DISTANCE, input.cd));
+    } else if (!Number.isFinite(player.cameraDistance)) {
+      player.cameraDistance = CAMERA_DISTANCE;
+    }
 
     player.ign = Math.max(0, (player.ign || 0) - deltaSeconds);
     if (
