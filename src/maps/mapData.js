@@ -61,9 +61,9 @@ function createDistrictWalls(baseWalls, mapIndex) {
 
 const rawMaps = [
   {
-    name: "New York", style: "new-york", sky: 0x9ec7e8, ground: 0x3a3d42, edge: 0x777777,
-    amb: 0.72, lit: 0, win: "#657d91", tint: [0x777d83, 0x8b8178, 0x6d7b83, 0x9b9487],
-    facade: "#7f8388", glass: "#426174", accent: "#b75f43", concrete: "#92918d",
+    name: "New York", style: "new-york", sky: 0x111a27, ground: 0x252b32, edge: 0x414b56,
+    amb: 0.52, lit: 0, win: "#8a9da9", tint: [0x39434d, 0x48413b, 0x34434b, 0x4b4b48],
+    facade: "#3c4650", glass: "#203645", accent: "#8f5848", concrete: "#4b4b49",
     walls: [60, 300, 540, 780].flatMap(x => [45, 265, 485].map(y => [x, y, 160, 140]))
       .filter(([x, y]) => !(y === 265 && (x === 300 || x === 540))),
     park: [[300, 265, 400, 140]],
@@ -75,9 +75,9 @@ const rawMaps = [
     }
   },
   {
-    name: "Paris", style: "paris", sky: 0xbcd6ee, ground: 0x6e6a60, edge: 0x8a8478,
-    amb: 0.78, lit: 0, win: "#50697d", tint: [0xc9bda7, 0xb4a48a, 0xe0d2b8],
-    facade: "#c1b39b", glass: "#415b6f", accent: "#b35f50", concrete: "#b9ae9d",
+    name: "Paris", style: "paris", sky: 0x182333, ground: 0x292a2b, edge: 0x514c46,
+    amb: 0.55, lit: 0, win: "#91a2ad", tint: [0x5a5147, 0x51483f, 0x655a4c],
+    facade: "#514a42", glass: "#253849", accent: "#805248", concrete: "#62594d",
     walls: [[60, 60, 230, 120], [60, 470, 230, 120], [710, 60, 230, 120], [710, 470, 230, 120], [330, 60, 340, 70], [330, 520, 340, 70], [60, 260, 140, 130], [800, 260, 140, 130], [422, 247, 24, 24], [554, 247, 24, 24], [422, 379, 24, 24], [554, 379, 24, 24]],
     heightAt: index => index < 8 ? 55 + ((index * 7) % 4) * 8 : 10,
     extra: (THREE, box, group) => {
@@ -88,9 +88,9 @@ const rawMaps = [
     }
   },
   {
-    name: "Tokyo", style: "tokyo", sky: 0x111826, ground: 0x252831, edge: 0x30323a,
-    amb: 0.48, lit: 1, win: "#ff4fa3", tint: [0x333746, 0x242d3c, 0x35313f, 0x202a34],
-    facade: "#303641", glass: "#142637", accent: "#ed43a6", concrete: "#454954",
+    name: "Tokyo", style: "tokyo", sky: 0x0b101c, ground: 0x171c26, edge: 0x303744,
+    amb: 0.46, lit: 1, win: "#ff65b5", tint: [0x252b39, 0x1b2635, 0x2a2434, 0x182531],
+    facade: "#252d39", glass: "#101f2d", accent: "#d83991", concrete: "#303846",
     walls: [[60, 50, 300, 200], [640, 50, 300, 200], [60, 400, 300, 200], [640, 400, 300, 200], [420, 60, 160, 80], [420, 510, 160, 80], [60, 285, 110, 80], [830, 285, 110, 80]],
     heightAt: index => 90 + ((index * 61) % 5) * 50,
     extra: (THREE, box) => {
@@ -101,9 +101,9 @@ const rawMaps = [
     }
   },
   {
-    name: "Dubai", style: "dubai", sky: 0x8fd0ff, ground: 0xb9a77f, edge: 0xa88e62,
-    amb: 0.84, lit: 0, win: "#9fd6ee", tint: [0xb8c5c8, 0xd6c7aa, 0x9fb2b8, 0xc9c0ac],
-    facade: "#c8b99b", glass: "#4e7e94", accent: "#d1a45f", concrete: "#c6b697",
+    name: "Dubai", style: "dubai", sky: 0x1a2836, ground: 0x37332d, edge: 0x645541,
+    amb: 0.58, lit: 0, win: "#a6bac0", tint: [0x586064, 0x665744, 0x4b5a60, 0x635d50],
+    facade: "#5a554a", glass: "#263e4d", accent: "#a98750", concrete: "#655b4a",
     walls: [[100, 100, 90, 90], [260, 180, 70, 70], [700, 150, 80, 80], [820, 380, 90, 90], [240, 430, 80, 80], [650, 450, 70, 70], [110, 330, 60, 60], [880, 150, 60, 60], [470, 295, 60, 60], [420, 100, 60, 50], [560, 540, 60, 50]],
     heightAt: index => index === 8 ? 60 : 100 + ((index * 47) % 6) * 45,
     extra: (THREE, box, group) => {
