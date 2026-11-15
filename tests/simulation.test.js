@@ -5,9 +5,16 @@ globalThis.window = {
   matchMedia: () => ({ matches: false })
 };
 
-const { MAPS, GAME_VERSION } = await import("../src/maps/mapData.js").then(async module => {
+const { MAPS, GAME_VERSION, WORLD_WIDTH, WORLD_HEIGHT, BULLET_SPEED, MAX_PLAYERS } = await import("../src/maps/mapData.js").then(async module => {
   const config = await import("../src/config/gameConfig.js");
-  return { MAPS: module.MAPS, GAME_VERSION: config.GAME_VERSION };
+  return {
+    MAPS: module.MAPS,
+    GAME_VERSION: config.GAME_VERSION,
+    WORLD_WIDTH: config.WORLD_WIDTH,
+    WORLD_HEIGHT: config.WORLD_HEIGHT,
+    BULLET_SPEED: config.BULLET_SPEED,
+    MAX_PLAYERS: config.MAX_PLAYERS
+  };
 });
 const { createGameState } = await import("../src/state/gameState.js");
 const { CollisionManager } = await import("../src/game/collisionManager.js");
@@ -53,4 +60,24 @@ test("shooting can damage and eliminate another player", () => {
   assert.equal(guest.health, 0);
   assert.equal(guest.deaths, 1);
   assert.equal(host.kills, 1);
+});
+
+
+test("expanded maps have dense buildings inside the larger world", () => {
+  assert.equal(WORLD_WIDTH, 4800);
+  assert.equal(WORLD_HEIGHT, 3120);
+  for (const map of MAPS) {
+    assert.ok(map.walls.length >= 40, `${map.name} should have at least 40 buildings`);
+    assert.equal(map.wallHeights.length, map.walls.length);
+    for (const [x, y, width, depth] of map.walls) {
+      assert.ok(x >= 0 && y >= 0);
+      assert.ok(x + width <= WORLD_WIDTH + 0.001);
+      assert.ok(y + depth <= WORLD_HEIGHT + 0.001);
+    }
+  }
+});
+
+test("combat and room capacity use the new tuning", () => {
+  assert.equal(BULLET_SPEED, 2400);
+  assert.equal(MAX_PLAYERS, 16);
 });
