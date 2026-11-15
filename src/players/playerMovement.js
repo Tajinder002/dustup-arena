@@ -1,4 +1,4 @@
-import { PLAYER_SPEED } from "../config/gameConfig.js";
+import { PLAYER_SPEED } from "../config/gameConfig.js?v=city-combat-v2";
 
 export class PlayerMovement {
   constructor(state, collisionManager) {
