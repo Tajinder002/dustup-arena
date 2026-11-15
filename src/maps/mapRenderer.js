@@ -1,5 +1,5 @@
-import { MAPS } from "./mapData.js?v=city-combat-v2";
-import { WORLD_WIDTH, WORLD_HEIGHT } from "../config/gameConfig.js?v=city-combat-v2";
+import { MAPS } from "./mapData.js?v=pubg-aim-v1";
+import { WORLD_WIDTH, WORLD_HEIGHT } from "../config/gameConfig.js?v=pubg-aim-v1";
 import { ASSET_MANIFEST } from "../assets/assetManifest.js";
 
 /** Builds the city locally from PBR geometry so every peer sees the same map. */
