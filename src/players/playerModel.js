@@ -16,22 +16,22 @@ export function createPlayerModel(THREE, colorIndex = 0) {
   group.name = "DustupStevePlayer";
 
   const material = color => new THREE.MeshLambertMaterial({ color });
-  const skin = material(0xb97855);
-  const hair = material(0x211b1a);
-  const hairHighlight = material(0x332925);
-  const shirt = material(0x1b2b3a);
-  const shirtShadow = material(0x111c28);
-  const armor = material(0x293846);
-  const armorEdge = material(0x526575);
-  const strap = material(0x101820);
-  const brass = material(0xa98a58);
-  const pants = material(0x172331);
-  const pantsShadow = material(0x0d1722);
-  const boots = material(0x171b21);
-  const gloves = material(0x202a34);
-  const eyeWhite = material(0xdce8e8);
-  const eyeBlue = material(0x55b7c8);
-  const darkBrown = material(0x241a18);
+  const skin = material(0xc58b62);
+  const hair = material(0x49301f);
+  const hairHighlight = material(0x765034);
+  const shirt = material(0x245da5);
+  const shirtShadow = material(0x173c70);
+  const armor = material(0x982c37);
+  const armorEdge = material(0xe95a63);
+  const strap = material(0x24252b);
+  const brass = material(0xc6a05b);
+  const pants = material(0x263b56);
+  const pantsShadow = material(0x17283e);
+  const boots = material(0x20252d);
+  const gloves = material(0x2c333d);
+  const eyeWhite = material(0xf3eee0);
+  const eyeBlue = material(0x315eae);
+  const darkBrown = material(0x38271f);
   const teamPatch = material(PLAYER_COLORS[colorIndex % PLAYER_COLORS.length]);
 
   // Torso and belt: classic blue shirt with small pixel-like pocket details.
@@ -44,6 +44,10 @@ export function createPlayerModel(THREE, colorIndex = 0) {
   // Low-profile tactical vest, shoulder plates and chest harness.
   addBlock(THREE, group, armor, 7.4, 9.2, 0.9, 0, 29, 3.42);
   addBlock(THREE, group, armorEdge, 5.2, 1.1, 0.45, 0, 33.2, 3.95);
+  addBlock(THREE, group, armorEdge, 4.6, 5.4, 0.32, 0, 28.2, 4.02);
+  addBlock(THREE, group, brass, 1.4, 1.4, 0.28, 0, 28.2, 4.22);
+  addBlock(THREE, group, armorEdge, 1.1, 2.7, 0.25, -5.1, 29.3, 3.9);
+  addBlock(THREE, group, armorEdge, 1.1, 2.7, 0.25, 5.1, 29.3, 3.9);
   addBlock(THREE, group, strap, 2, 12.5, 0.75, -3.4, 27.2, 3.8);
   addBlock(THREE, group, brass, 2.1, 2.1, 0.55, -3.4, 25.5, 4.24);
   addBlock(THREE, group, shirtShadow, 12.3, 2.2, 6.25, 0, 18.3, 0);
